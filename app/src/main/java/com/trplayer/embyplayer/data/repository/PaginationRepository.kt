@@ -3,10 +3,13 @@ package com.trplayer.embyplayer.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.trplayer.embyplayer.data.remote.EmblyApiService
-import com.trplayer.embyplayer.domain.model.MediaItem
+import com.trplayer.embyplayer.data.model.MediaItem
+import com.trplayer.embyplayer.data.remote.EmbyApiService
+import com.trplayer.embyplayer.domain.model.EmbyServer
+import com.trplayer.embyplayer.domain.repository.EmbyRepository
 import com.trplayer.embyplayer.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 /**
@@ -14,7 +17,9 @@ import javax.inject.Inject
  * 支持分页加载、预加载和缓存管理
  */
 class PaginationRepository @Inject constructor(
-    private val apiService: EmbyApiService
+    private val apiService: EmbyApiService,
+    private val embyRepository: EmbyRepository,
+    private val currentServer: EmbyServer?
 ) : MediaRepository {
     
     companion object {
@@ -25,7 +30,8 @@ class PaginationRepository @Inject constructor(
     /**
      * 获取媒体项的分页数据流
      */
-    override fun getMediaItems(parentId: String?): Flow<PagingData<MediaItem>> {
+    override suspend fun getMediaItems(parentId: String?): Flow<PagingData<MediaItem>> {
+        val userId = embyRepository.getCurrentUser().first() ?: throw IllegalStateException("用户未登录")
         return Pager(
             config = PagingConfig(
                 pageSize = DEFAULT_PAGE_SIZE,
@@ -33,7 +39,7 @@ class PaginationRepository @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                MediaPagingSource(apiService, parentId)
+                MediaPagingSource(apiService, userId, parentId, currentServer?.getBaseUrl() ?: "")
             }
         ).flow
     }
@@ -41,7 +47,8 @@ class PaginationRepository @Inject constructor(
     /**
      * 搜索媒体项的分页数据流
      */
-    override fun searchMediaItems(query: String): Flow<PagingData<MediaItem>> {
+    override suspend fun searchMediaItems(query: String): Flow<PagingData<MediaItem>> {
+        val userId = embyRepository.getCurrentUser().first() ?: throw IllegalStateException("用户未登录")
         return Pager(
             config = PagingConfig(
                 pageSize = DEFAULT_PAGE_SIZE,
@@ -49,7 +56,7 @@ class PaginationRepository @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                SearchPagingSource(apiService, query)
+                SearchPagingSource(apiService, userId, query, currentServer?.getBaseUrl() ?: "")
             }
         ).flow
     }
@@ -60,7 +67,9 @@ class PaginationRepository @Inject constructor(
  */
 class MediaPagingSource(
     private val apiService: EmbyApiService,
-    private val parentId: String?
+    private val userId: String,
+    private val parentId: String?,
+    private val serverBaseUrl: String
 ) : androidx.paging.PagingSource<Int, MediaItem>() {
     
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
@@ -69,12 +78,15 @@ class MediaPagingSource(
             val pageSize = params.loadSize
             
             val response = apiService.getItems(
+                userId = userId,
                 parentId = parentId,
                 startIndex = page * pageSize,
                 limit = pageSize
             )
             
-            val mediaItems = response.items.map { it.toMediaItem() }
+            val mediaItems = response.items.map { embyItem ->
+                MediaItem.fromEmbyItem(embyItem, serverBaseUrl)
+            }
             
             LoadResult.Page(
                 data = mediaItems,
@@ -99,7 +111,9 @@ class MediaPagingSource(
  */
 class SearchPagingSource(
     private val apiService: EmbyApiService,
-    private val query: String
+    private val userId: String,
+    private val query: String,
+    private val serverBaseUrl: String
 ) : androidx.paging.PagingSource<Int, MediaItem>() {
     
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
@@ -108,12 +122,15 @@ class SearchPagingSource(
             val pageSize = params.loadSize
             
             val response = apiService.searchItems(
+                userId = userId,
                 query = query,
                 startIndex = page * pageSize,
                 limit = pageSize
             )
             
-            val mediaItems = response.items.map { it.toMediaItem() }
+            val mediaItems = response.items.map { embyItem ->
+                MediaItem.fromEmbyItem(embyItem, serverBaseUrl)
+            }
             
             LoadResult.Page(
                 data = mediaItems,

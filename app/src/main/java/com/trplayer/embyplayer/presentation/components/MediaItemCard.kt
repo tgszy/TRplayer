@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.trplayer.embyplayer.data.model.FileFormat
 import com.trplayer.embyplayer.data.model.MediaItem
 import com.trplayer.embyplayer.data.model.MediaType
 
@@ -220,6 +221,41 @@ fun MediaInfo(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+        
+        // 文件格式信息
+        if (mediaItem.isStrmFile || mediaItem.fileFormat != FileFormat.UNKNOWN) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // strm文件标识
+                if (mediaItem.isStrmFile) {
+                    Surface(
+                        modifier = Modifier
+                            .height(20.dp)
+                            .padding(horizontal = 6.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    ) {
+                        Text(
+                            text = "STRM",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+                
+                // 文件格式
+                if (mediaItem.fileFormat != FileFormat.UNKNOWN) {
+                    Text(
+                        text = mediaItem.fileFormat.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }
