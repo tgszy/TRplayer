@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用名称 -->
+    <string name="app_name">TRPlayer</string>
+    
+    <!-- 通用字符串 -->
+    <string name="app_description">TRPlayer - 多媒体播放器</string>
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    <string name="delete">删除</string>
+    <string name="edit">编辑</string>
+    
+    <!-- 播放器相关 -->
+    <string name="play">播放</string>
+    <string name="pause">暂停</string>
+    <string name="stop">停止</string>
+    <string name="next">下一首</string>
+    <string name="previous">上一首</string>
+    <string name="volume">音量</string>
+    <string name="mute">静音</string>
+    
+    <!-- 错误消息 -->
+    <string name="error_network">网络连接错误</string>
+    <string name="error_media">媒体文件无法播放</string>
+    <string name="error_server">服务器连接失败</string>
+    
+    <!-- 设置相关 -->
+    <string name="settings">设置</string>
+    <string name="language">语言</string>
+    <string name="theme">主题</string>
+    <string name="about">关于</string>
+</resources>

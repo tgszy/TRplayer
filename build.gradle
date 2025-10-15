@@ -49,10 +49,7 @@ buildscript {
 
 // 所有子项目的配置
 allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
+    // 仓库配置已移至settings.gradle中的dependencyResolutionManagement
 }
 
 // 清理任务
