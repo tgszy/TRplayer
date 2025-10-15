@@ -106,7 +106,22 @@ interface EmbyRepository {
      * @return 播放信息，包含媒体源信息
      */
     suspend fun getPlaybackInfo(userId: String, itemId: String): Result<PlaybackInfoResponse>
-    
+
+    /**
+     * 获取媒体播放URL
+     * @param userId 用户ID
+     * @param itemId 媒体项ID
+     * @param mediaSourceId 媒体源ID
+     * @param startTimeTicks 开始播放位置（可选）
+     * @return 播放URL
+     */
+    suspend fun getPlaybackUrl(
+        userId: String,
+        itemId: String,
+        mediaSourceId: String,
+        startTimeTicks: Long? = null
+    ): Result<String>
+
     /**
      * 报告播放开始
      * @param request 播放开始请求信息
@@ -159,4 +174,18 @@ interface EmbyRepository {
      * 清除所有认证信息
      */
     suspend fun clearAuthentication()
+    
+    // ==================== 服务器管理相关 ====================
+    
+    /**
+     * 获取所有已保存的服务器列表
+     * @return 服务器列表
+     */
+    suspend fun getServers(): List<com.trplayer.embyplayer.domain.model.EmbyServer>
+    
+    /**
+     * 设置服务器列表
+     * @param servers 服务器列表
+     */
+    suspend fun setServers(servers: List<com.trplayer.embyplayer.domain.model.EmbyServer>)
 }

@@ -292,7 +292,8 @@ data class LibraryUiState(
  */
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val repository: EmbyRepository
+    private val repository: EmbyRepository,
+    private val exoPlayerManager: ExoPlayerManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -316,13 +317,45 @@ class PlayerViewModel @Inject constructor(
                     if (playbackResult.isSuccess) {
                         val playbackInfo = playbackResult.getOrThrow()
                         
-                        _uiState.update { state ->
-                            state.copy(
-                                currentItem = item,
-                                playbackInfo = playbackInfo,
-                                isLoading = false,
-                                errorMessage = null
+                        // 获取播放URL
+                        val mediaSource = playbackInfo.mediaSources.firstOrNull()
+                        if (mediaSource != null) {
+                            val mediaUrlResult = repository.getPlaybackUrl(
+                                userId = userId,
+                                itemId = itemId,
+                                mediaSourceId = mediaSource.id
                             )
+                            
+                            if (mediaUrlResult.isSuccess) {
+                                val mediaUrl = mediaUrlResult.getOrThrow()
+                                exoPlayerManager.preparePlayer(mediaUrl)
+                                
+                                _uiState.update { state ->
+                                    state.copy(
+                                        currentItem = item,
+                                        playbackInfo = playbackInfo,
+                                        isLoading = false,
+                                        errorMessage = null
+                                    )
+                                }
+                                
+                                // 开始播放
+                                play()
+                            } else {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        isLoading = false,
+                                        errorMessage = "无法获取播放地址: ${mediaUrlResult.exceptionOrNull()?.message}"
+                                    )
+                                }
+                            }
+                        } else {
+                            _uiState.update { state ->
+                                state.copy(
+                                    isLoading = false,
+                                    errorMessage = "无法获取播放地址"
+                                )
+                            }
                         }
                     } else {
                         _uiState.update { state ->
@@ -348,6 +381,46 @@ class PlayerViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+    
+    /**
+     * 开始播放
+     */
+    fun play() {
+        viewModelScope.launch {
+            exoPlayerManager.play()
+            _uiState.update { it.copy(isPlaying = true) }
+        }
+    }
+    
+    /**
+     * 暂停播放
+     */
+    fun pause() {
+        viewModelScope.launch {
+            exoPlayerManager.pause()
+            _uiState.update { it.copy(isPlaying = false) }
+        }
+    }
+    
+    /**
+     * 跳转到指定位置
+     */
+    fun seekTo(position: Long) {
+        viewModelScope.launch {
+            exoPlayerManager.seekTo(position)
+            _uiState.update { it.copy(currentPosition = position) }
+        }
+    }
+    
+    /**
+     * 设置音量
+     */
+    fun setVolume(volume: Float) {
+        viewModelScope.launch {
+            exoPlayerManager.setVolume(volume)
+            _uiState.update { it.copy(volume = volume) }
         }
     }
 
@@ -408,5 +481,8 @@ data class PlayerUiState(
     val currentItem: EmbyItem? = null,
     val playbackInfo: PlaybackInfoResponse? = null,
     val isLoading: Boolean = false,
+    val isPlaying: Boolean = false,
+    val currentPosition: Long = 0L,
+    val volume: Float = 1.0f,
     val errorMessage: String? = null
 )

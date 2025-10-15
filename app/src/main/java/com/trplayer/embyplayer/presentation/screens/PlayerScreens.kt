@@ -11,18 +11,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.trplayer.embyplayer.presentation.components.ExoPlayerComponent
+import com.trplayer.embyplayer.presentation.viewmodels.PlayerViewModel
 
 /**
  * 播放器界面
  * 提供视频播放控制和播放信息显示
  */
 @Composable
-fun PlayerScreen(navController: NavHostController) {
-    var isPlaying by remember { mutableStateOf(false) }
+fun PlayerScreen(
+    navController: NavHostController,
+    itemId: String? = null,
+    userId: String? = null
+) {
+    val playerViewModel: PlayerViewModel = hiltViewModel()
+    
+    // 初始化播放器
+    LaunchedEffect(Unit) {
+        if (itemId != null && userId != null) {
+            playerViewModel.preparePlayback(userId, itemId)
+        }
+    }
+    
+    val uiState by playerViewModel.uiState.collectAsState()
     var showControls by remember { mutableStateOf(false) }
-    var currentPosition by remember { mutableStateOf(0L) }
-    var totalDuration by remember { mutableStateOf(100L) }
     
     Box(
         modifier = Modifier
@@ -35,38 +49,61 @@ fun PlayerScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .clickable { showControls = !showControls }
         ) {
-            // 这里将集成ExoPlayer视频播放器
-            // 暂时显示占位内容
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "播放",
-                    modifier = Modifier.size(64.dp),
-                    tint = Color.White
+            if (uiState.currentItem != null && uiState.playbackInfo != null) {
+                // 使用实际的ExoPlayer播放器
+                ExoPlayerComponent(
+                    exoPlayerManager = playerViewModel.exoPlayerManager,
+                    modifier = Modifier.fillMaxSize()
                 )
-                Text(
-                    text = "视频播放器",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.White,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
+            } else {
+                // 加载状态或错误状态
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(color = Color.White)
+                        Text(
+                            text = "正在加载...",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "播放",
+                            modifier = Modifier.size(64.dp),
+                            tint = Color.White
+                        )
+                        Text(
+                            text = uiState.errorMessage ?: "准备播放",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                    }
+                }
             }
         }
         
         // 播放控制面板
         if (showControls) {
             PlayerControls(
-                isPlaying = isPlaying,
-                currentPosition = currentPosition,
-                totalDuration = totalDuration,
-                onPlayPause = { isPlaying = !isPlaying },
-                onSeek = { position -> currentPosition = position },
+                isPlaying = uiState.isPlaying,
+                currentPosition = uiState.currentPosition,
+                totalDuration = uiState.currentItem?.runTimeTicks?.div(10000) ?: 0L,
+                onPlayPause = { 
+                    if (uiState.isPlaying) {
+                        playerViewModel.pause()
+                    } else {
+                        playerViewModel.play()
+                    }
+                },
+                onSeek = { position -> playerViewModel.seekTo(position) },
                 onBack = { navController.popBackStack() },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )

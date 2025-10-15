@@ -105,9 +105,37 @@ class EmbyDataStore @Inject constructor(
     }
     
     // 获取方法（用于协程外部调用）
-    suspend fun getCurrentServer(): EmbyServer? = currentServer
-    suspend fun getAccessToken(): String? = accessToken
-    suspend fun getUserId(): String? = userId
-    suspend fun getUserName(): String? = userName
-    suspend fun getServers(): List<EmbyServer> = servers
+    suspend fun getCurrentServer(): EmbyServer? {
+        return context.dataStore.data.map { preferences ->
+            preferences[CURRENT_SERVER]?.let { serverJson ->
+                json.decodeFromString<EmbyServer>(serverJson)
+            }
+        }.first()
+    }
+    
+    suspend fun getAccessToken(): String? {
+        return context.dataStore.data.map { preferences ->
+            preferences[ACCESS_TOKEN]
+        }.first()
+    }
+    
+    suspend fun getUserId(): String? {
+        return context.dataStore.data.map { preferences ->
+            preferences[USER_ID]
+        }.first()
+    }
+    
+    suspend fun getUserName(): String? {
+        return context.dataStore.data.map { preferences ->
+            preferences[USER_NAME]
+        }.first()
+    }
+    
+    suspend fun getServers(): List<EmbyServer> {
+        return context.dataStore.data.map { preferences ->
+            preferences[SERVERS]?.let { serversJson ->
+                json.decodeFromString<List<EmbyServer>>(serversJson)
+            } ?: emptyList()
+        }.first()
+    }
 }

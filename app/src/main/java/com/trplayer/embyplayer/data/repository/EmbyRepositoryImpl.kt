@@ -197,6 +197,44 @@ class EmbyRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getPlaybackUrl(
+        userId: String,
+        itemId: String,
+        mediaSourceId: String,
+        startTimeTicks: Long?
+    ): Result<String> {
+        return try {
+            // 获取当前服务器信息
+            val server = dataStore.getCurrentServer()
+            val accessToken = dataStore.getAccessToken()
+            
+            if (server == null || accessToken == null) {
+                return Result.failure(Exception("未连接到服务器或未认证"))
+            }
+            
+            // 构建播放URL
+            val baseUrl = server.getEmbyUrl()
+            val urlBuilder = StringBuilder("$baseUrl/Videos/$itemId/stream")
+            
+            // 添加查询参数
+            urlBuilder.append("?api_key=$accessToken")
+            urlBuilder.append("&MediaSourceId=$mediaSourceId")
+            urlBuilder.append("&Static=true")
+            
+            if (startTimeTicks != null) {
+                urlBuilder.append("&StartTimeTicks=$startTimeTicks")
+            }
+            
+            // 添加设备信息参数
+            urlBuilder.append("&DeviceId=TRPlayer-Android")
+            urlBuilder.append("&Device=Android")
+            
+            Result.success(urlBuilder.toString())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun reportPlaybackStart(request: PlaybackStartRequest): Result<Unit> {
         return try {
             val response = apiService.reportPlaybackStart(request)
@@ -253,6 +291,16 @@ class EmbyRepositoryImpl @Inject constructor(
 
     override suspend fun clearAuthentication() {
         dataStore.clearAll()
+    }
+
+    // ==================== 服务器管理相关 ====================
+
+    override suspend fun getServers(): List<EmbyServer> {
+        return dataStore.getServers()
+    }
+
+    override suspend fun setServers(servers: List<EmbyServer>) {
+        dataStore.setServers(servers)
     }
 
     // ==================== 私有辅助方法 ====================

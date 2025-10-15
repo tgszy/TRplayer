@@ -35,10 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.trplayer.embyplayer.data.model.FileFormat
 import com.trplayer.embyplayer.data.model.MediaItem
 import com.trplayer.embyplayer.data.model.MediaType
+import com.trplayer.embyplayer.presentation.image.CoilImage
 
 /**
  * 媒体项卡片组件
@@ -98,8 +98,8 @@ fun MediaCover(
             .clip(RoundedCornerShape(8.dp))
     ) {
         if (mediaItem.thumbnailUrl.isNotEmpty()) {
-            AsyncImage(
-                model = mediaItem.thumbnailUrl,
+            CoilImage(
+                imageUrl = mediaItem.thumbnailUrl,
                 contentDescription = "媒体封面",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
