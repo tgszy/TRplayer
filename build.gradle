@@ -1,0 +1,61 @@
+// 项目级构建配置
+buildscript {
+    ext {
+        // Kotlin版本
+        kotlin_version = '1.9.22'
+        
+        // Android Gradle插件版本
+        agp_version = '8.2.2'
+        
+        // Compose版本
+        compose_version = '1.6.0'
+        
+        // Hilt版本
+        hilt_version = '2.50'
+        
+        // Retrofit版本
+        retrofit_version = '2.9.0'
+        
+        // OkHttp版本
+        okhttp_version = '4.12.0'
+        
+        // ExoPlayer版本
+        exoplayer_version = '2.19.1'
+        
+        // Room版本
+        room_version = '2.6.1'
+        
+        // DataStore版本
+        datastore_version = '1.0.0'
+        
+        // Navigation版本
+        navigation_version = '2.7.7'
+        
+        // Coil版本（图片加载）
+        coil_version = '2.6.0'
+    }
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    
+    dependencies {
+        classpath "com.android.tools.build:gradle:$agp_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
+    }
+}
+
+// 所有子项目的配置
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// 清理任务
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

@@ -1,0 +1,64 @@
+# Android项目Git忽略规则
+
+# 构建文件
+/build
+/app/build
+*.apk
+*.ap_
+*.aab
+
+# Gradle文件
+.gradle
+/gradlew
+/gradlew.bat
+
+# 本地配置文件
+local.properties
+
+# 日志文件
+*.log
+
+# 缓存文件
+.cache/
+
+# IDE文件
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Android Studio特定文件
+.navigation/
+.captures/
+
+# Keystore文件
+*.jks
+*.keystore
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+
+# 测试覆盖率报告
+coverage/
+
+# 包依赖缓存
+.packages
+
+# 配置文件
+*.orig
+
+# 大型媒体文件（可根据需要调整）
+*.mp4
+*.mkv
+*.avi
+*.mp3
+*.flac
+
+# 下载的媒体文件
+/downloads/
+/cache/
