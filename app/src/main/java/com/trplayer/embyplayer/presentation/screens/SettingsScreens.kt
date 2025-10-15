@@ -159,6 +159,58 @@ fun ServerSettingsScreen(navController: NavHostController) {
                 }
             }
         }
+        
+        item {
+            // 缓存管理设置
+            CacheManagementSettingsCard(
+                onNavigateToCacheManagement = {
+                    navController.navigate("cache_management")
+                }
+            )
+        }
+    }
+}
+
+/**
+ * 缓存管理设置卡片
+ */
+@Composable
+fun CacheManagementSettingsCard(
+    onNavigateToCacheManagement: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "缓存管理",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Text(
+                text = "管理应用缓存，清理不需要的文件以释放存储空间",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Button(
+                onClick = onNavigateToCacheManagement,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Storage,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("管理缓存")
+            }
+        }
     }
 }
 

@@ -31,6 +31,9 @@ sealed class Screen(val route: String) {
     
     /** 搜索界面 */
     object Search : Screen("search")
+    
+    /** 缓存管理界面 */
+    object CacheManagement : Screen("cache_management")
 }
 
 /**
@@ -78,4 +81,7 @@ object NavRoutes {
     fun search(query: String = ""): String {
         return "${Screen.Search.route}/$query"
     }
+    
+    /** 缓存管理路由 */
+    const val CACHE_MANAGEMENT = Screen.CacheManagement.route
 }

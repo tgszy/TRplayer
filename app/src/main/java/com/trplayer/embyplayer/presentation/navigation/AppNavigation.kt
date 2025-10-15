@@ -74,6 +74,13 @@ fun AppNavigation(navController: NavHostController) {
             // 暂时显示占位界面
             PlaceholderScreen("搜索: $query")
         }
+        
+        // 缓存管理导航图
+        composable(NavRoutes.CACHE_MANAGEMENT) { backStackEntry ->
+            CacheManagementScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
     }
 }
 
