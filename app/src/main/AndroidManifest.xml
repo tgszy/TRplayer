@@ -13,6 +13,9 @@
         android:maxSdkVersion="32" 
         tools:ignore="ScopedStorage" />
     
+    <!-- Android 14+ 前台服务媒体播放权限 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    
     <!-- 安卓电视特性 -->
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -42,18 +45,18 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.EmbyPlayer"
         android:usesCleartextTraffic="true"
+        android:banner="@drawable/ic_launcher"
         tools:targetApi="31">
         
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.EmbyPlayer">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -81,10 +84,12 @@
             android:exported="false"
             android:theme="@style/Theme.EmbyPlayer.FullScreen" />
 
+        <!-- 音频播放器服务 - Android 14+ 前台服务类型声明 -->
         <service
             android:name=".presentation.player.AudioPlayerService"
             android:exported="false"
-            android:foregroundServiceType="mediaPlayback">
+            android:foregroundServiceType="mediaPlayback"
+            android:description="@string/audio_service_description">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>

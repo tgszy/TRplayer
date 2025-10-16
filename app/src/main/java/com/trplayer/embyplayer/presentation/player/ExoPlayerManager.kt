@@ -2,21 +2,15 @@ package com.trplayer.embyplayer.presentation.player
 
 import android.content.Context
 import android.net.Uri
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
-import androidx.media3.exoplayer.upstream.DefaultHttpDataSource
-import androidx.media3.exoplayer.upstream.cache.CacheDataSource
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
-import com.trplayer.embyplayer.data.remote.EmbyApiService
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.PlaybackException
+import com.google.android.exoplayer2.Player
+import com.trplayer.embyplayer.data.remote.api.EmbyApiService
 import com.trplayer.embyplayer.domain.model.EmbyItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,83 +25,47 @@ class ExoPlayerManager @Inject constructor(
 ) {
     
     private var exoPlayer: ExoPlayer? = null
-    private var mediaCache: SimpleCache? = null
     
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
-    
-    companion object {
-        private const val CACHE_DIR_NAME = "media_cache"
-        private const val CACHE_SIZE = 100 * 1024 * 1024L // 100MB
-    }
     
     /**
      * 初始化播放器
      */
     fun initializePlayer() {
         if (exoPlayer == null) {
-            // 初始化缓存
-            val cacheDir = File(context.cacheDir, CACHE_DIR_NAME)
-            mediaCache = SimpleCache(cacheDir, LeastRecentlyUsedCacheEvictor(CACHE_SIZE))
-            
-            // 创建HTTP数据源工厂
-            val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent("TRplayer/1.0")
-                .setConnectTimeoutMs(DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS)
-                .setReadTimeoutMs(DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS)
-            
-            // 创建缓存数据源工厂
-            val cacheDataSourceFactory = CacheDataSource.Factory()
-                .setCache(mediaCache!!)
-                .setUpstreamDataSourceFactory(httpDataSourceFactory)
-                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
-            
-            // 创建媒体源工厂
-            val mediaSourceFactory = DefaultMediaSourceFactory(cacheDataSourceFactory)
-            
-            // 创建轨道选择器
-            val trackSelector = DefaultTrackSelector(context).apply {
-                setParameters(buildUponParameters().setMaxVideoSizeSd())
-            }
-            
             // 创建ExoPlayer实例
-            exoPlayer = ExoPlayer.Builder(context)
-                .setMediaSourceFactory(mediaSourceFactory)
-                .setTrackSelector(trackSelector)
+            val player = ExoPlayer.Builder(context)
                 .build()
-                .apply {
-                    // 设置播放器监听器
-                    addListener(object : Player.Listener {
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            _playerState.value = _playerState.value.copy(
-                                playbackState = playbackState,
-                                isPlaying = playbackState == Player.STATE_READY && isPlaying
-                            )
-                        }
-                        
-                        override fun onPlayerError(error: PlaybackException) {
-                            _playerState.value = _playerState.value.copy(
-                                error = error,
-                                errorMessage = error.message ?: "播放错误"
-                            )
-                        }
-                        
-                        override fun onIsPlayingChanged(isPlaying: Boolean) {
-                            _playerState.value = _playerState.value.copy(isPlaying = isPlaying)
-                        }
-                        
-                        override fun onPositionDiscontinuity(
-                            oldPosition: Player.PositionInfo,
-                            newPosition: Player.PositionInfo,
-                            reason: Int
-                        ) {
-                            _playerState.value = _playerState.value.copy(
-                                currentPosition = newPosition.positionMs,
-                                duration = duration
-                            )
-                        }
-                    })
+                
+            player.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    _playerState.value = _playerState.value.copy(
+                        playbackState = playbackState,
+                        isPlaying = playbackState == Player.STATE_READY && player.isPlaying
+                    )
                 }
+                
+                override fun onPlayerError(error: PlaybackException) {
+                    _playerState.value = _playerState.value.copy(
+                        error = error,
+                        errorMessage = error.message ?: "播放错误"
+                    )
+                }
+                
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    _playerState.value = _playerState.value.copy(isPlaying = isPlaying)
+                }
+                
+                override fun onPositionDiscontinuity(reason: Int) {
+                    _playerState.value = _playerState.value.copy(
+                        currentPosition = player.currentPosition,
+                        duration = player.duration
+                    )
+                }
+            })
+            
+            exoPlayer = player
         }
     }
     
@@ -119,7 +77,7 @@ class ExoPlayerManager @Inject constructor(
         exoPlayer?.let { player ->
             try {
                 // 创建媒体项
-                val mediaItem = MediaItem.fromUri(Uri.parse(mediaUrl))
+                val mediaItem: MediaItem = MediaItem.fromUri(mediaUrl)
                 
                 // 设置媒体项并准备播放
                 player.setMediaItem(mediaItem)
@@ -146,10 +104,10 @@ class ExoPlayerManager @Inject constructor(
         exoPlayer?.let { player ->
             try {
                 // 构建媒体URL（需要根据Emby API获取播放URL）
-                val mediaUrl = buildMediaUrl(embyItem, accessToken)
+                val mediaUrl: String = buildMediaUrl(embyItem, accessToken)
                 
                 // 创建媒体项
-                val mediaItem = MediaItem.fromUri(Uri.parse(mediaUrl))
+                val mediaItem: MediaItem = MediaItem.fromUri(mediaUrl)
                 
                 // 设置媒体项并准备播放
                 player.setMediaItem(mediaItem)
@@ -239,8 +197,6 @@ class ExoPlayerManager @Inject constructor(
     fun release() {
         exoPlayer?.release()
         exoPlayer = null
-        mediaCache?.release()
-        mediaCache = null
         _playerState.value = PlayerState()
     }
     

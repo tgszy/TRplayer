@@ -15,11 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.size.Size
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Size
+import androidx.compose.ui.platform.LocalContext
 import com.trplayer.embyplayer.presentation.image.ImageLoader
 import com.trplayer.embyplayer.presentation.image.rememberImageLoader
 
@@ -47,27 +48,7 @@ fun CoilImage(
             .build(),
         contentDescription = contentDescription,
         modifier = modifier,
-        contentScale = contentScale,
-        placeholder = placeholder ?: {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        },
-        error = error ?: {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                // 显示错误图标
-                androidx.compose.material3.Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.BrokenImage,
-                    contentDescription = "加载失败"
-                )
-            }
-        }
+        contentScale = contentScale
     )
 }
 

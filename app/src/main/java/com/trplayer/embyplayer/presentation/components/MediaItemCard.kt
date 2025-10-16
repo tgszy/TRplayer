@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.trplayer.embyplayer.data.model.FileFormat
 import com.trplayer.embyplayer.data.model.MediaItem
 import com.trplayer.embyplayer.data.model.MediaType
-import com.trplayer.embyplayer.presentation.image.CoilImage
+import com.trplayer.embyplayer.presentation.components.CoilImage
 
 /**
  * 媒体项卡片组件
@@ -99,7 +99,7 @@ fun MediaCover(
     ) {
         if (mediaItem.thumbnailUrl.isNotEmpty()) {
             CoilImage(
-                imageUrl = mediaItem.thumbnailUrl,
+                url = mediaItem.thumbnailUrl,
                 contentDescription = "媒体封面",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -206,9 +206,9 @@ fun MediaInfo(
             }
             
             // 评分
-            if (mediaItem.rating > 0) {
+            if (mediaItem.userData?.rating != null && mediaItem.userData.rating!! > 0) {
                 Text(
-                    text = "⭐ ${mediaItem.rating}",
+                    text = "⭐ ${mediaItem.userData.rating}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

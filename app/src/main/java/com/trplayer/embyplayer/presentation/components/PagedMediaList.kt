@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +21,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.trplayer.embyplayer.data.model.MediaItem
+import com.trplayer.embyplayer.presentation.components.LoadingIndicator
 
 /**
  * 分页媒体列表组件
@@ -145,19 +145,6 @@ fun PagedMediaList(
                 )
             }
         }
-    }
-}
-
-/**
- * 加载指示器
- */
-@Composable
-fun LoadingIndicator(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
     }
 }
 

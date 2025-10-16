@@ -5,7 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.ui.PlayerView
+import com.google.android.exoplayer2.ui.PlayerView
 import com.trplayer.embyplayer.presentation.player.ExoPlayerManager
 
 /**
@@ -20,11 +20,11 @@ fun ExoPlayerComponent(
     val context = LocalContext.current
     
     AndroidView(
-        factory = { ctx ->
+        factory = { ctx: Context ->
             createPlayerView(ctx, exoPlayerManager)
         },
         modifier = modifier,
-        update = { playerView ->
+        update = { playerView: PlayerView ->
             // 更新播放器视图
             exoPlayerManager.getPlayer()?.let { player ->
                 playerView.player = player
@@ -40,7 +40,6 @@ private fun createPlayerView(context: Context, exoPlayerManager: ExoPlayerManage
     return PlayerView(context).apply {
         useController = true
         setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
-        setShowSubtitleButton(true)
         setShowFastForwardButton(true)
         setShowRewindButton(true)
         setShowNextButton(false)

@@ -1,8 +1,10 @@
 package com.trplayer.embyplayer.di
 
 import android.content.Context
+import com.trplayer.embyplayer.data.local.datastore.EmbyDataStore
 import com.trplayer.embyplayer.data.remote.api.EmbyApiService
 import com.trplayer.embyplayer.data.remote.interceptor.EmbyAuthInterceptor
+import com.trplayer.embyplayer.presentation.player.ExoPlayerManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,8 +31,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideEmbyAuthInterceptor(@ApplicationContext context: Context): EmbyAuthInterceptor {
-        return EmbyAuthInterceptor(context)
+    fun provideEmbyAuthInterceptor(@ApplicationContext context: Context, dataStore: EmbyDataStore): EmbyAuthInterceptor {
+        return EmbyAuthInterceptor(context, dataStore)
     }
 
     @Provides
@@ -62,5 +64,14 @@ object NetworkModule {
     @Singleton
     fun provideEmbyApiService(retrofit: Retrofit): EmbyApiService {
         return retrofit.create(EmbyApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExoPlayerManager(
+        context: Context,
+        apiService: EmbyApiService
+    ): ExoPlayerManager {
+        return ExoPlayerManager(context, apiService)
     }
 }

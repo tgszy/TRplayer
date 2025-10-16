@@ -1,6 +1,7 @@
 package com.trplayer.embyplayer.data.local.cache
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -24,13 +25,16 @@ class CacheManager @Inject constructor(
     
     companion object {
         const val CACHE_CLEANUP_WORK_NAME = "cache_cleanup_work"
-        const val CACHE_MAX_SIZE = BuildConfig.CACHE_MAX_SIZE
-        const val CACHE_EXPIRY_TIME = BuildConfig.CACHE_EXPIRY_TIME
+        const val CACHE_MAX_SIZE = 1024 * 1024 * 1024L // 1GB
+        const val CACHE_EXPIRY_TIME = 7 * 24 * 60 * 60 * 1000L // 7天
+        private const val PREFS_NAME = "cache_prefs"
+        private const val KEY_AUTO_CLEAN_ENABLED = "auto_clean_enabled"
     }
     
     private val cacheDir = context.cacheDir
     private val externalCacheDir = context.externalCacheDir
     private val workManager = WorkManager.getInstance(context)
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     
     /**
      * 清理所有缓存
@@ -68,6 +72,34 @@ class CacheManager @Inject constructor(
     }
     
     /**
+     * 获取总缓存大小
+     */
+    override suspend fun getTotalCacheSize(): Long {
+        return getCacheSize()
+    }
+
+    /**
+     * 获取媒体缓存大小
+     */
+    override suspend fun getMediaCacheSize(): Long {
+        return getDirectorySize(getMediaCacheDir())
+    }
+
+    /**
+     * 获取图片缓存大小
+     */
+    override suspend fun getImageCacheSize(): Long {
+        return getDirectorySize(getImageCacheDir())
+    }
+
+    /**
+     * 获取临时文件大小
+     */
+    override suspend fun getTempFilesSize(): Long {
+        return getDirectorySize(getTempDir())
+    }
+
+    /**
      * 获取缓存大小
      */
     override suspend fun getCacheSize(): Long {
@@ -82,6 +114,25 @@ class CacheManager @Inject constructor(
     override suspend fun shouldCleanCache(): Boolean {
         val cacheSize = getCacheSize()
         return cacheSize > CACHE_MAX_SIZE || hasExpiredFiles()
+    }
+
+    /**
+     * 检查是否启用自动清理
+     */
+    override suspend fun isAutoCleanEnabled(): Boolean {
+        return sharedPreferences.getBoolean(KEY_AUTO_CLEAN_ENABLED, true) // 默认启用
+    }
+
+    /**
+     * 设置自动清理开关
+     */
+    override suspend fun setAutoCleanEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_AUTO_CLEAN_ENABLED, enabled).apply()
+        if (enabled) {
+            scheduleCacheCleanup()
+        } else {
+            cancelCacheCleanup()
+        }
     }
     
     /**

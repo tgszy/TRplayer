@@ -1,5 +1,6 @@
 package com.trplayer.embyplayer.data.remote.api
 
+import com.google.gson.annotations.SerializedName
 import com.trplayer.embyplayer.data.remote.model.*
 import retrofit2.Response
 import retrofit2.http.*
@@ -172,3 +173,4 @@ data class PlaybackInfoResponse(
     @SerializedName("MediaSources") val mediaSources: List<MediaSource>,
     @SerializedName("PlaySessionId") val playSessionId: String,
     @SerializedName("ErrorCode") val errorCode: String? = null
+)

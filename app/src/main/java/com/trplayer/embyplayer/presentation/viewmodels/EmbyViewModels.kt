@@ -2,14 +2,20 @@ package com.trplayer.embyplayer.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trplayer.embyplayer.data.remote.model.PlaybackInfoResponse
+import com.trplayer.embyplayer.data.remote.model.PlaybackStartRequest
+import com.trplayer.embyplayer.data.remote.model.PlaybackProgressRequest
+import com.trplayer.embyplayer.data.remote.model.PlaybackStopRequest
 import com.trplayer.embyplayer.domain.model.EmbyItem
 import com.trplayer.embyplayer.domain.model.EmbyLibrary
 import com.trplayer.embyplayer.domain.model.EmbyServer
 import com.trplayer.embyplayer.domain.repository.EmbyRepository
+import com.trplayer.embyplayer.presentation.player.ExoPlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -97,7 +103,7 @@ class ServerViewModel @Inject constructor(
             
             try {
                 val servers = repository.getServers()
-                val currentServer = repository.getCurrentServer()
+                val currentServer = repository.getCurrentServer().first()
                 
                 _uiState.update { state ->
                     state.copy(
@@ -293,7 +299,7 @@ data class LibraryUiState(
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val repository: EmbyRepository,
-    private val exoPlayerManager: ExoPlayerManager
+    val exoPlayerManager: ExoPlayerManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -318,7 +324,7 @@ class PlayerViewModel @Inject constructor(
                         val playbackInfo = playbackResult.getOrThrow()
                         
                         // 获取播放URL
-                        val mediaSource = playbackInfo.mediaSources.firstOrNull()
+                        val mediaSource = playbackInfo.mediaSources?.firstOrNull()
                         if (mediaSource != null) {
                             val mediaUrlResult = repository.getPlaybackUrl(
                                 userId = userId,

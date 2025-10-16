@@ -4,6 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+    id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
 android {
@@ -21,6 +22,9 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+        
+        // 为API 26以下的设备禁用自适应图标
+        manifestPlaceholders = [enableAdaptiveIcons: minSdk >= 26]
         
         // 多平台支持配置
         buildConfigField "boolean", "SUPPORT_TV", "true"
@@ -87,12 +91,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     buildFeatures {
@@ -176,8 +180,11 @@ dependencies {
     implementation "io.coil-kt:coil-compose:$coil_version"
     
     // 工具库
-    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    
+    // Kotlin序列化
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
     
     // 测试依赖
     testImplementation 'junit:junit:4.13.2'

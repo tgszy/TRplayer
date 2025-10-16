@@ -1,5 +1,6 @@
 package com.trplayer.embyplayer.presentation.screens.tv
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,16 +30,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.tv.material3.Button
 import androidx.tv.material3.Card
 import androidx.tv.material3.CardDefaults
-import androidx.tv.material3.CircularProgressIndicator
+
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Icon
 import androidx.tv.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Storage
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
-import androidx.tv.material3.Scaffold
+// import androidx.tv.material3.Scaffold // 移除Scaffold导入，使用Box布局
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.trplayer.embyplayer.presentation.screens.tv.TvTopAppBar
+
 import com.trplayer.embyplayer.presentation.viewmodels.CacheManagementViewModel
 
 /**
@@ -57,23 +64,33 @@ fun TvCacheManagementScreen(
         viewModel.loadCacheInfo()
     }
     
-    Scaffold(
-        topBar = {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // 顶部标题栏
             TvTopAppBar(
                 title = "缓存管理",
-                onBackClick = onBackClick
+                onBackClick = onBackClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             )
-        }
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+            
+            // 主要内容区域
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp)
+                    .padding(all = 32.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 // 缓存概览卡片
@@ -109,11 +126,12 @@ fun TvCacheManagementScreen(
                 // 缓存设置
                 TvCacheSettings(
                     autoCleanEnabled = cacheState.autoCleanEnabled,
-                    onAutoCleanToggle = { enabled ->
+                    onAutoCleanToggle = { enabled: Boolean ->
                         viewModel.setAutoCleanEnabled(enabled)
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+                }
             }
         }
         
@@ -141,6 +159,7 @@ fun TvCacheOverviewCard(
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = {},
         modifier = modifier,
         scale = CardDefaults.scale(focusedScale = 1.02f)
     ) {
@@ -151,7 +170,7 @@ fun TvCacheOverviewCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = androidx.tv.material3.icons.Icons.Default.Storage,
+                imageVector = Icons.Default.Storage,
                 contentDescription = "缓存",
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.primary
@@ -168,7 +187,17 @@ fun TvCacheOverviewCard(
             Spacer(modifier = Modifier.height(24.dp))
             
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                Box(
+                    modifier = Modifier.size(48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // 电视UI使用简单的点状加载指示器
+                    Text(
+                        text = "●",
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             } else {
                 Text(
                     text = formatFileSize(cacheSize),
@@ -201,6 +230,7 @@ fun TvCacheTypeDetails(
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = { /* 设置卡片不需要点击事件 */ },
         modifier = modifier,
         scale = CardDefaults.scale(focusedScale = 1.02f)
     ) {
@@ -302,7 +332,7 @@ fun TvCacheActions(
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
-                imageVector = androidx.tv.material3.icons.Icons.Default.Delete,
+                imageVector = Icons.Default.Delete,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )
@@ -366,6 +396,7 @@ fun TvCacheSettings(
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = { /* 设置卡片不需要点击事件 */ },
         modifier = modifier,
         scale = CardDefaults.scale(focusedScale = 1.02f)
     ) {
@@ -429,6 +460,7 @@ fun TvCacheClearConfirmationDialog(
         contentAlignment = Alignment.Center
     ) {
         Card(
+            onClick = { /* 对话框卡片不需要点击事件 */ },
             modifier = Modifier.fillMaxWidth(0.6f)
         ) {
             Column(

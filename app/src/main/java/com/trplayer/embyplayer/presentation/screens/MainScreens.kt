@@ -20,7 +20,7 @@ import com.trplayer.embyplayer.presentation.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController) {
-    var selectedTab by remember { mutableStateOf(Screen.Home) }
+    var selectedTab by remember { mutableStateOf<Screen>(Screen.Home) }
     
     Scaffold(
         topBar = {
@@ -69,6 +69,7 @@ fun MainScreen(navController: NavHostController) {
                 Screen.Libraries -> LibrariesScreen(navController)
                 Screen.Latest -> LatestScreen(navController)
                 Screen.Downloads -> DownloadsScreen(navController)
+                else -> HomeScreen(navController) // 默认显示首页
             }
         }
     }
@@ -125,14 +126,16 @@ fun HomeScreen(navController: NavHostController) {
             QuickAccessCard(
                 title = "继续观看",
                 icon = Icons.Default.PlayArrow,
-                onClick = { navController.navigate(Screen.Libraries.route) }
+                onClick = { navController.navigate(Screen.Libraries.route) },
+                modifier = Modifier.weight(1f)
             )
             
             // 最新添加
             QuickAccessCard(
                 title = "最新添加",
                 icon = Icons.Default.NewReleases,
-                onClick = { navController.navigate(Screen.Latest.route) }
+                onClick = { navController.navigate(Screen.Latest.route) },
+                modifier = Modifier.weight(1f)
             )
         }
 
@@ -144,14 +147,16 @@ fun HomeScreen(navController: NavHostController) {
             QuickAccessCard(
                 title = "电影",
                 icon = Icons.Default.Movie,
-                onClick = { /* 导航到电影页面 */ }
+                onClick = { /* 导航到电影页面 */ },
+                modifier = Modifier.weight(1f)
             )
             
             // 电视剧
             QuickAccessCard(
                 title = "电视剧",
                 icon = Icons.Default.Tv,
-                onClick = { /* 导航到电视剧页面 */ }
+                onClick = { /* 导航到电视剧页面 */ },
+                modifier = Modifier.weight(1f)
             )
         }
 
@@ -179,12 +184,13 @@ fun HomeScreen(navController: NavHostController) {
 @Composable
 fun QuickAccessCard(
     title: String,
-    icon: androidx.compose.material.icons.Icons.Filled,
-    onClick: () -> Unit
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .weight(1f)
+        modifier = modifier
+            .fillMaxWidth()
             .aspectRatio(1f),
         onClick = onClick,
         colors = CardDefaults.cardColors(

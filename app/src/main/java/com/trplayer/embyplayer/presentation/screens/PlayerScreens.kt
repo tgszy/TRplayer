@@ -1,6 +1,7 @@
 package com.trplayer.embyplayer.presentation.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -95,7 +96,7 @@ fun PlayerScreen(
             PlayerControls(
                 isPlaying = uiState.isPlaying,
                 currentPosition = uiState.currentPosition,
-                totalDuration = uiState.currentItem?.runTimeTicks?.div(10000) ?: 0L,
+                totalDuration = uiState.currentItem?.runtimeTicks?.div(10000) ?: 0L,
                 onPlayPause = { 
                     if (uiState.isPlaying) {
                         playerViewModel.pause()

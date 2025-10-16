@@ -6,17 +6,12 @@ import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import coil3.ImageLoader as CoilImageLoader
-import coil3.PlatformContext
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import coil3.SingletonImageLoader
-import coil3.decode.ImageSource
-import coil3.disk.DiskCache
-import coil3.memory.MemoryCache
-import coil3.network.ktor.KtorNetworkFetcherFactory
-import coil3.request.crossfade
-import coil3.util.DebugLogger
+import coil.ImageLoader as CoilImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
+import coil.util.DebugLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -49,8 +44,6 @@ class ImageLoader @Inject constructor(
         CoilImageLoader.Builder(context)
             .memoryCache(memoryCache)
             .diskCache(diskCache)
-            .networkFetcherFactory(KtorNetworkFetcherFactory())
-            .crossfade(true)
             .respectCacheHeaders(false) // 忽略服务器缓存头，使用自定义缓存策略
             .logger(DebugLogger())
             .build()
@@ -114,7 +107,7 @@ class ImageLoader @Inject constructor(
      */
     suspend fun getCacheSize(): Long {
         return withContext(Dispatchers.IO) {
-            diskCache.size()
+            diskCache.size
         }
     }
 }

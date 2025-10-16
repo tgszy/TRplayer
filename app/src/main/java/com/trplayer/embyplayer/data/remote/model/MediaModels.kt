@@ -9,7 +9,7 @@ data class EmbyLibrary(
     @SerializedName("Etag") val etag: String,
     @SerializedName("CanDelete") val canDelete: Boolean,
     @SerializedName("CanDownload") val canDownload: Boolean,
-    @SerializedName("SupportsSync"] val supportsSync: Boolean,
+    @SerializedName("SupportsSync") val supportsSync: Boolean,
     @SerializedName("SupportsUpload") val supportsUpload: Boolean,
     @SerializedName("IsPublic") val isPublic: Boolean,
     @SerializedName("ChannelId") val channelId: String?,
@@ -149,4 +149,41 @@ data class UserData(
     @SerializedName("LastPlayedDate") val lastPlayedDate: String?,
     @SerializedName("Played") val played: Boolean,
     @SerializedName("Key") val key: String
+)
+
+data class PlaybackInfoResponse(
+    @SerializedName("MediaSources") val mediaSources: List<MediaSource>?,
+    @SerializedName("PlaySessionId") val playSessionId: String?,
+    @SerializedName("ErrorCode") val errorCode: String?
+)
+
+data class PlaybackStartRequest(
+    @SerializedName("CanSeek") val canSeek: Boolean,
+    @SerializedName("ItemId") val itemId: String,
+    @SerializedName("MediaSourceId") val mediaSourceId: String,
+    @SerializedName("AudioStreamIndex") val audioStreamIndex: Int?,
+    @SerializedName("SubtitleStreamIndex") val subtitleStreamIndex: Int?,
+    @SerializedName("PlayMethod") val playMethod: String,
+    @SerializedName("PlaySessionId") val playSessionId: String
+)
+
+data class PlaybackProgressRequest(
+    @SerializedName("ItemId") val itemId: String,
+    @SerializedName("MediaSourceId") val mediaSourceId: String,
+    @SerializedName("PlaySessionId") val playSessionId: String,
+    @SerializedName("PositionTicks") val positionTicks: Long,
+    @SerializedName("IsPaused") val isPaused: Boolean,
+    @SerializedName("PlayMethod") val playMethod: String,
+    @SerializedName("CanSeek") val canSeek: Boolean,
+    @SerializedName("AudioStreamIndex") val audioStreamIndex: Int?,
+    @SerializedName("SubtitleStreamIndex") val subtitleStreamIndex: Int?
+)
+
+data class PlaybackStopRequest(
+    @SerializedName("ItemId") val itemId: String,
+    @SerializedName("MediaSourceId") val mediaSourceId: String,
+    @SerializedName("PlaySessionId") val playSessionId: String,
+    @SerializedName("PositionTicks") val positionTicks: Long,
+    @SerializedName("PlayMethod") val playMethod: String,
+    @SerializedName("Failed") val failed: Boolean = false
 )

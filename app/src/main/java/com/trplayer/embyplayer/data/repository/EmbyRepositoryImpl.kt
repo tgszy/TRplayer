@@ -2,7 +2,14 @@ package com.trplayer.embyplayer.data.repository
 
 import com.trplayer.embyplayer.data.local.datastore.EmbyDataStore
 import com.trplayer.embyplayer.data.remote.api.EmbyApiService
-import com.trplayer.embyplayer.data.remote.model.*
+import com.trplayer.embyplayer.data.remote.model.EmbyItem as RemoteEmbyItem
+import com.trplayer.embyplayer.data.remote.model.AuthenticationResult
+import com.trplayer.embyplayer.data.remote.model.EmbyUser as RemoteEmbyUser
+import com.trplayer.embyplayer.data.remote.model.PlaybackInfoResponse
+import com.trplayer.embyplayer.data.remote.model.PlaybackStartRequest
+import com.trplayer.embyplayer.data.remote.model.PlaybackProgressRequest
+import com.trplayer.embyplayer.data.remote.model.PlaybackStopRequest
+import com.trplayer.embyplayer.domain.model.EmbyItem
 import com.trplayer.embyplayer.domain.model.*
 import com.trplayer.embyplayer.domain.repository.EmbyRepository
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +28,7 @@ class EmbyRepositoryImpl @Inject constructor(
 
     // ==================== 用户认证相关 ====================
 
-    override suspend fun authenticateUser(userId: String, password: String?): Result<AuthenticationResult> {
+    override suspend fun authenticateUser(userId: String, password: String?): Result<com.trplayer.embyplayer.data.remote.model.AuthenticationResult> {
         return try {
             val response = apiService.authenticateUser(userId, password)
             if (response.isSuccessful) {
@@ -44,7 +51,17 @@ class EmbyRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.getPublicUsers()
             if (response.isSuccessful) {
-                Result.success(response.body() ?: emptyList())
+                val remoteUsers = response.body() ?: emptyList()
+                val domainUsers = remoteUsers.map { remoteUser ->
+                    EmbyUser(
+                        id = remoteUser.id,
+                        name = remoteUser.name,
+                        serverId = remoteUser.serverId,
+                        hasPassword = remoteUser.hasPassword,
+                        lastLoginDate = remoteUser.lastLoginDate
+                    )
+                }
+                Result.success(domainUsers)
             } else {
                 Result.failure(HttpException(response))
             }
@@ -57,7 +74,16 @@ class EmbyRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.getUserById(userId)
             if (response.isSuccessful) {
-                response.body()?.let { Result.success(it) } ?: Result.failure(Exception("用户不存在"))
+                response.body()?.let { remoteUser ->
+                    val domainUser = EmbyUser(
+                        id = remoteUser.id,
+                        name = remoteUser.name,
+                        serverId = remoteUser.serverId,
+                        hasPassword = remoteUser.hasPassword,
+                        lastLoginDate = remoteUser.lastLoginDate
+                    )
+                    Result.success(domainUser)
+                } ?: Result.failure(Exception("用户不存在"))
             } else {
                 Result.failure(HttpException(response))
             }
@@ -308,7 +334,7 @@ class EmbyRepositoryImpl @Inject constructor(
     /**
      * 将远程API返回的媒体项转换为域模型
      */
-    private fun convertToDomainItem(remoteItem: com.trplayer.embyplayer.data.remote.model.EmbyItem): EmbyItem {
+    private fun convertToDomainItem(remoteItem: RemoteEmbyItem): EmbyItem {
         return EmbyItem(
             id = remoteItem.id,
             name = remoteItem.name,

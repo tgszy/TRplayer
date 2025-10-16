@@ -195,8 +195,11 @@ fun TvLoadingIndicator(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            androidx.tv.material3.CircularProgressIndicator(
-                modifier = Modifier.size(48.dp)
+            // 使用简单的点状加载指示器替代CircularProgressIndicator
+            Text(
+                text = "●",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = "加载中...",

@@ -1,7 +1,9 @@
 package com.trplayer.embyplayer.presentation.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -9,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -319,7 +322,7 @@ fun ServerListItem(
                             .background(
                                 color = if (isConnected) MaterialTheme.colorScheme.primary 
                                        else MaterialTheme.colorScheme.error,
-                                shape = androidx.compose.foundation.shape.Circle
+                                shape = androidx.compose.foundation.shape.CircleShape
                             )
                     )
                     Spacer(Modifier.width(8.dp))
@@ -334,7 +337,7 @@ fun ServerListItem(
             Row {
                 IconButton(onClick = onConnect) {
                     Icon(
-                        imageVector = if (isConnected) Icons.Default.Link else I.Default.LinkOff,
+                        imageVector = if (isConnected) Icons.Default.Link else Icons.Default.LinkOff,
                         contentDescription = if (isConnected) "断开连接" else "连接"
                     )
                 }

@@ -3,8 +3,9 @@ package com.trplayer.embyplayer.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.PagingState
 import com.trplayer.embyplayer.data.model.MediaItem
-import com.trplayer.embyplayer.data.remote.EmbyApiService
+import com.trplayer.embyplayer.data.remote.api.EmbyApiService
 import com.trplayer.embyplayer.domain.model.EmbyServer
 import com.trplayer.embyplayer.domain.repository.EmbyRepository
 import com.trplayer.embyplayer.domain.repository.MediaRepository
@@ -23,14 +24,14 @@ class PaginationRepository @Inject constructor(
 ) : MediaRepository {
     
     companion object {
-        const val DEFAULT_PAGE_SIZE = BuildConfig.PAGE_SIZE
-        const val PRELOAD_THRESHOLD = BuildConfig.PRELOAD_THRESHOLD
+        const val DEFAULT_PAGE_SIZE = 20
+        const val PRELOAD_THRESHOLD = 5
     }
     
     /**
      * 获取媒体项的分页数据流
      */
-    override suspend fun getMediaItems(parentId: String?): Flow<PagingData<MediaItem>> {
+    fun getMediaPagingData(parentId: String?): Flow<PagingData<MediaItem>> {
         val userId = embyRepository.getCurrentUser().first() ?: throw IllegalStateException("用户未登录")
         return Pager(
             config = PagingConfig(
@@ -47,7 +48,7 @@ class PaginationRepository @Inject constructor(
     /**
      * 搜索媒体项的分页数据流
      */
-    override suspend fun searchMediaItems(query: String): Flow<PagingData<MediaItem>> {
+    fun searchMediaPagingData(query: String): Flow<PagingData<MediaItem>> {
         val userId = embyRepository.getCurrentUser().first() ?: throw IllegalStateException("用户未登录")
         return Pager(
             config = PagingConfig(
@@ -59,6 +60,27 @@ class PaginationRepository @Inject constructor(
                 SearchPagingSource(apiService, userId, query, currentServer?.getBaseUrl() ?: "")
             }
         ).flow
+    }
+    
+    /**
+     * 预加载指定位置的媒体项
+     */
+    suspend fun preloadMediaItems(visibleItemIndices: List<Int>, totalItemCount: Int) {
+        // 实现预加载逻辑
+    }
+    
+    /**
+     * 设置预加载阈值
+     */
+    suspend fun setPreloadThreshold(threshold: Int) {
+        // 实现设置预加载阈值逻辑
+    }
+    
+    /**
+     * 设置页面大小
+     */
+    suspend fun setPageSize(size: Int) {
+        // 实现设置页面大小逻辑
     }
 }
 
@@ -123,8 +145,7 @@ class SearchPagingSource(
             
             val response = apiService.searchItems(
                 userId = userId,
-                query = query,
-                startIndex = page * pageSize,
+                searchTerm = query,
                 limit = pageSize
             )
             

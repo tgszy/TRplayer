@@ -8,6 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme as TvMaterialTheme
+import androidx.tv.material3.darkColorScheme as tvDarkColorScheme
+import androidx.tv.material3.lightColorScheme as tvLightColorScheme
+import com.trplayer.embyplayer.BuildConfig
+import com.trplayer.embyplayer.presentation.theme.TvTypography
+import com.trplayer.embyplayer.presentation.theme.TvShapes
 
 /**
  * 安卓电视主题配置
@@ -15,7 +20,7 @@ import androidx.tv.material3.MaterialTheme as TvMaterialTheme
  */
 
 // 电视亮色主题配色
-private val TvLightColorScheme = lightColorScheme(
+private val TvLightColorScheme = tvLightColorScheme(
     primary = Color(0xFF0066CC),
     onPrimary = Color.White,
     primaryContainer = Color(0xFFD6E3FF),
@@ -33,13 +38,11 @@ private val TvLightColorScheme = lightColorScheme(
     surface = Color(0xFFFDFBFF),
     onSurface = Color(0xFF1A1C1E),
     surfaceVariant = Color(0xFFE0E2EC),
-    onSurfaceVariant = Color(0xFF43474E),
-    outline = Color(0xFF74777F),
-    outlineVariant = Color(0xFFC4C6D0)
+    onSurfaceVariant = Color(0xFF43474E)
 )
 
 // 电视深色主题配色
-private val TvDarkColorScheme = darkColorScheme(
+private val TvDarkColorScheme = tvDarkColorScheme(
     primary = Color(0xFFABC7FF),
     onPrimary = Color(0xFF002E6B),
     primaryContainer = Color(0xFF004396),
@@ -57,9 +60,7 @@ private val TvDarkColorScheme = darkColorScheme(
     surface = Color(0xFF1A1C1E),
     onSurface = Color(0xFFE2E2E6),
     surfaceVariant = Color(0xFF43474E),
-    onSurfaceVariant = Color(0xFFC4C6D0),
-    outline = Color(0xFF8E9099),
-    outlineVariant = Color(0xFF43474E)
+    onSurfaceVariant = Color(0xFFC4C6D0)
 )
 
 /**
