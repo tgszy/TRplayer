@@ -2,66 +2,50 @@ package com.trplayer.embyplayer.presentation.image
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import coil.ImageLoader as CoilImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import coil.disk.DiskCache
-import coil.memory.MemoryCache
-import coil.util.DebugLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import java.io.File
-import java.io.FileOutputStream
-import java.net.URL
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * 图片加载管理器
  * 使用Coil进行高效的图片加载和缓存管理
  */
-@Singleton
-class ImageLoader @Inject constructor(
-    private val context: Context
-) {
-    
-    private val memoryCache = MemoryCache.Builder()
-        .maxSizePercent(0.25) // 使用25%的可用内存作为图片缓存
-        .build()
-    
-    private val diskCache = DiskCache.Builder()
-        .directory(File(context.cacheDir, "image_cache"))
-        .maxSizeBytes(100L * 1024 * 1024) // 100MB磁盘缓存
-        .build()
-    
-    // 创建Coil图片加载器
-    val coilImageLoader: CoilImageLoader by lazy {
-        CoilImageLoader.Builder(context)
-            .memoryCache(memoryCache)
-            .diskCache(diskCache)
-            .respectCacheHeaders(false) // 忽略服务器缓存头，使用自定义缓存策略
-            .logger(DebugLogger())
-            .build()
-    }
+class ImageLoader {
     
     /**
      * 加载图片到Bitmap
      */
-    suspend fun loadBitmap(url: String): Bitmap? {
+    suspend fun loadBitmap(context: Context, url: String): Bitmap? {
         return try {
             val request = ImageRequest.Builder(context)
                 .data(url)
                 .allowHardware(false)
                 .build()
             
-            val result = coilImageLoader.execute(request)
+            val imageLoader = CoilImageLoader.Builder(context).build()
+            val result = imageLoader.execute(request)
             if (result is SuccessResult) {
-                result.image.toBitmap()
+                // 使用drawable而不是image属性
+                val drawable = result.drawable
+                if (drawable != null) {
+                    // 将drawable转换为bitmap
+                    val bitmap = Bitmap.createBitmap(
+                        drawable.intrinsicWidth,
+                        drawable.intrinsicHeight,
+                        Bitmap.Config.ARGB_8888
+                    )
+                    val canvas = android.graphics.Canvas(bitmap)
+                    drawable.setBounds(0, 0, canvas.width, canvas.height)
+                    drawable.draw(canvas)
+                    bitmap
+                } else {
+                    null
+                }
             } else {
                 null
             }
@@ -74,40 +58,18 @@ class ImageLoader @Inject constructor(
     /**
      * 预加载图片到缓存
      */
-    suspend fun preloadImage(url: String) {
+    suspend fun preloadImage(context: Context, url: String) {
         try {
             val request = ImageRequest.Builder(context)
                 .data(url)
                 .size(100, 100) // 预加载小尺寸图片
                 .build()
             
-            coilImageLoader.enqueue(request)
+            val imageLoader = CoilImageLoader.Builder(context).build()
+            imageLoader.enqueue(request)
         } catch (e: Exception) {
             // 预加载失败不影响主流程
             e.printStackTrace()
-        }
-    }
-    
-    /**
-     * 清除内存缓存
-     */
-    fun clearMemoryCache() {
-        memoryCache.clear()
-    }
-    
-    /**
-     * 清除磁盘缓存
-     */
-    fun clearDiskCache() {
-        diskCache.clear()
-    }
-    
-    /**
-     * 获取缓存大小
-     */
-    suspend fun getCacheSize(): Long {
-        return withContext(Dispatchers.IO) {
-            diskCache.size
         }
     }
 }
@@ -126,8 +88,7 @@ sealed class ImageLoadState {
  */
 @Composable
 fun rememberImageLoader(): ImageLoader {
-    val context = LocalContext.current
     return remember {
-        ImageLoader(context)
+        ImageLoader()
     }
 }

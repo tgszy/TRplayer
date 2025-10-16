@@ -3,6 +3,7 @@ package com.trplayer.embyplayer.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.trplayer.embyplayer.data.model.MediaItem
 import com.trplayer.embyplayer.data.remote.api.EmbyApiService
@@ -92,7 +93,7 @@ class MediaPagingSource(
     private val userId: String,
     private val parentId: String?,
     private val serverBaseUrl: String
-) : androidx.paging.PagingSource<Int, MediaItem>() {
+) : PagingSource<Int, MediaItem>() {
     
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
         return try {
@@ -110,13 +111,13 @@ class MediaPagingSource(
                 MediaItem.fromEmbyItem(embyItem, serverBaseUrl)
             }
             
-            LoadResult.Page(
+            LoadResult.Page<Int, MediaItem>(
                 data = mediaItems,
                 prevKey = if (page > 0) page - 1 else null,
                 nextKey = if (mediaItems.isNotEmpty()) page + 1 else null
             )
         } catch (e: Exception) {
-            LoadResult.Error(e)
+            LoadResult.Error<Int, MediaItem>(e)
         }
     }
     
@@ -136,7 +137,7 @@ class SearchPagingSource(
     private val userId: String,
     private val query: String,
     private val serverBaseUrl: String
-) : androidx.paging.PagingSource<Int, MediaItem>() {
+) : PagingSource<Int, MediaItem>() {
     
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
         return try {
@@ -153,13 +154,13 @@ class SearchPagingSource(
                 MediaItem.fromEmbyItem(embyItem, serverBaseUrl)
             }
             
-            LoadResult.Page(
+            LoadResult.Page<Int, MediaItem>(
                 data = mediaItems,
                 prevKey = if (page > 0) page - 1 else null,
                 nextKey = if (mediaItems.isNotEmpty()) page + 1 else null
             )
         } catch (e: Exception) {
-            LoadResult.Error(e)
+            LoadResult.Error<Int, MediaItem>(e)
         }
     }
     

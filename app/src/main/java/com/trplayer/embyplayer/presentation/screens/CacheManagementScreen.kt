@@ -50,6 +50,7 @@ import com.trplayer.embyplayer.presentation.viewmodels.CacheManagementViewModel
  * 缓存管理界面
  * 提供缓存清理、大小查看和设置功能
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CacheManagementScreen(
     onBackClick: () -> Unit,

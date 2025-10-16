@@ -2,10 +2,12 @@ package com.trplayer.embyplayer.presentation.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -93,7 +95,7 @@ fun PagedMediaList(
                             item {
                                 LoadingIndicator(
                                     modifier = Modifier
-                                        .fillParentMaxSize()
+                                        .fillMaxSize()
                                         .padding(16.dp)
                                 )
                             }
@@ -115,7 +117,7 @@ fun PagedMediaList(
                                 ErrorMessage(
                                     message = "加载失败: ${error.error.message}",
                                     modifier = Modifier
-                                        .fillParentMaxSize()
+                                        .fillMaxSize()
                                         .padding(16.dp)
                                 )
                             }

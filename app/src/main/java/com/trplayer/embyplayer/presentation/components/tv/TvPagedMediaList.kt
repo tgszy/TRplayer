@@ -73,8 +73,7 @@ fun TvPagedMediaList(
     }
     
     Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        modifier = modifier.fillMaxSize()
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(

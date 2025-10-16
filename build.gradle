@@ -2,7 +2,7 @@
 buildscript {
     ext {
         // Kotlin版本
-        kotlin_version = '1.9.22'
+        kotlin_version = '1.9.24'
         
         // Android Gradle插件版本
         agp_version = '8.13.0'

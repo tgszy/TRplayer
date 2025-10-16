@@ -1,6 +1,9 @@
 package com.trplayer.embyplayer.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -91,7 +94,7 @@ fun AppNavigation(navController: NavHostController) {
 fun PlaceholderScreen(screenName: String) {
     androidx.compose.material3.Text(
         text = "$screenName 界面开发中...",
-        modifier = androidx.compose.ui.Modifier
+        modifier = Modifier
             .fillMaxSize()
             .wrapContentSize()
     )

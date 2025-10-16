@@ -52,25 +52,25 @@ object NavParams {
  */
 object NavRoutes {
     /** 主界面路由 */
-    const val MAIN = Screen.Main.route
+    val MAIN: String = Screen.Main.route
     
     /** 首页路由 */
-    const val HOME = Screen.Home.route
+    val HOME: String = Screen.Home.route
     
     /** 媒体库路由 */
-    const val LIBRARIES = Screen.Libraries.route
+    val LIBRARIES: String = Screen.Libraries.route
     
     /** 最新内容路由 */
-    const val LATEST = Screen.Latest.route
+    val LATEST: String = Screen.Latest.route
     
     /** 下载管理路由 */
-    const val DOWNLOADS = Screen.Downloads.route
+    val DOWNLOADS: String = Screen.Downloads.route
     
     /** 服务器设置路由 */
-    const val SERVER_SETTINGS = Screen.ServerSettings.route
+    val SERVER_SETTINGS: String = Screen.ServerSettings.route
     
     /** 播放器路由 */
-    const val PLAYER = Screen.Player.route
+    val PLAYER: String = Screen.Player.route
     
     /** 媒体详情路由 */
     fun mediaDetail(itemId: String): String {
@@ -83,5 +83,5 @@ object NavRoutes {
     }
     
     /** 缓存管理路由 */
-    const val CACHE_MANAGEMENT = Screen.CacheManagement.route
+    val CACHE_MANAGEMENT: String = Screen.CacheManagement.route
 }

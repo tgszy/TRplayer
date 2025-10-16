@@ -58,10 +58,11 @@ fun CoilImage(
 @Composable
 fun PreloadImage(url: String) {
     val imageLoader = rememberImageLoader()
+    val context = LocalContext.current
     
     LaunchedEffect(url) {
         if (url.isNotBlank()) {
-            imageLoader.preloadImage(url)
+            imageLoader.preloadImage(context, url)
         }
     }
 }
@@ -73,10 +74,11 @@ fun PreloadImage(url: String) {
 fun rememberImageBitmap(url: String?): ImageBitmap? {
     var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val imageLoader = rememberImageLoader()
+    val context = LocalContext.current
     
     LaunchedEffect(url) {
         if (url != null) {
-            val loadedBitmap = imageLoader.loadBitmap(url)
+            val loadedBitmap = imageLoader.loadBitmap(context, url)
             bitmap = loadedBitmap?.asImageBitmap()
         } else {
             bitmap = null
