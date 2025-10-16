@@ -8,6 +8,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.trplayer.embyplayer.domain.repository.CacheRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,7 +21,7 @@ import javax.inject.Inject
  * 负责媒体缓存、图片缓存和临时文件的清理
  */
 class CacheManager @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) : CacheRepository {
     
     companion object {

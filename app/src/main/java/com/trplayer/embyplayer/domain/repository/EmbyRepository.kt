@@ -1,6 +1,11 @@
 package com.trplayer.embyplayer.domain.repository
 
-import com.trplayer.embyplayer.data.remote.model.*
+import com.trplayer.embyplayer.data.remote.model.AuthenticationResult
+import com.trplayer.embyplayer.data.remote.model.EmbyUser as RemoteEmbyUser
+import com.trplayer.embyplayer.data.remote.api.PlaybackInfoResponse
+import com.trplayer.embyplayer.data.remote.api.PlaybackStartRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackProgressRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackStopRequest
 import com.trplayer.embyplayer.domain.model.EmbyItem
 import com.trplayer.embyplayer.domain.model.EmbyLibrary
 import com.trplayer.embyplayer.domain.model.EmbyUser
@@ -27,14 +32,14 @@ interface EmbyRepository {
      * 获取服务器上的公开用户列表
      * @return 用户列表
      */
-    suspend fun getPublicUsers(): Result<List<EmbyUser>>
+    suspend fun getPublicUsers(): Result<List<RemoteEmbyUser>>
     
     /**
      * 根据用户ID获取用户详细信息
      * @param userId 用户ID
      * @return 用户详细信息
      */
-    suspend fun getUserById(userId: String): Result<EmbyUser>
+    suspend fun getUserById(userId: String): Result<RemoteEmbyUser>
     
     // ==================== 媒体库和媒体项相关 ====================
     

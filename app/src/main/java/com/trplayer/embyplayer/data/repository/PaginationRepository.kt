@@ -7,11 +7,16 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.trplayer.embyplayer.data.model.MediaItem
 import com.trplayer.embyplayer.data.remote.api.EmbyApiService
+import com.trplayer.embyplayer.domain.model.EmbyItem as DomainEmbyItem
+import com.trplayer.embyplayer.domain.model.MediaSource as DomainMediaSource
+import com.trplayer.embyplayer.domain.model.UserData as DomainUserData
 import com.trplayer.embyplayer.domain.model.EmbyServer
 import com.trplayer.embyplayer.domain.repository.EmbyRepository
 import com.trplayer.embyplayer.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emitAll
 import javax.inject.Inject
 
 /**
@@ -20,8 +25,7 @@ import javax.inject.Inject
  */
 class PaginationRepository @Inject constructor(
     private val apiService: EmbyApiService,
-    private val embyRepository: EmbyRepository,
-    private val currentServer: EmbyServer?
+    private val embyRepository: EmbyRepository
 ) : MediaRepository {
     
     companion object {
@@ -32,8 +36,10 @@ class PaginationRepository @Inject constructor(
     /**
      * 获取媒体项的分页数据流
      */
-    fun getMediaPagingData(parentId: String?): Flow<PagingData<MediaItem>> {
+    override suspend fun getMediaItems(parentId: String?): Flow<PagingData<MediaItem>> {
         val userId = embyRepository.getCurrentUser().first() ?: throw IllegalStateException("用户未登录")
+        val currentServer = embyRepository.getCurrentServer().first()
+        val serverBaseUrl = currentServer?.getBaseUrl() ?: ""
         return Pager(
             config = PagingConfig(
                 pageSize = DEFAULT_PAGE_SIZE,
@@ -41,7 +47,7 @@ class PaginationRepository @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                MediaPagingSource(apiService, userId, parentId, currentServer?.getBaseUrl() ?: "")
+                MediaPagingSource(apiService, userId, parentId, serverBaseUrl)
             }
         ).flow
     }
@@ -49,8 +55,10 @@ class PaginationRepository @Inject constructor(
     /**
      * 搜索媒体项的分页数据流
      */
-    fun searchMediaPagingData(query: String): Flow<PagingData<MediaItem>> {
+    override suspend fun searchMediaItems(query: String): Flow<PagingData<MediaItem>> {
         val userId = embyRepository.getCurrentUser().first() ?: throw IllegalStateException("用户未登录")
+        val currentServer = embyRepository.getCurrentServer().first()
+        val serverBaseUrl = currentServer?.getBaseUrl() ?: ""
         return Pager(
             config = PagingConfig(
                 pageSize = DEFAULT_PAGE_SIZE,
@@ -58,7 +66,7 @@ class PaginationRepository @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                SearchPagingSource(apiService, userId, query, currentServer?.getBaseUrl() ?: "")
+                SearchPagingSource(apiService, userId, query, serverBaseUrl)
             }
         ).flow
     }
@@ -94,6 +102,120 @@ class MediaPagingSource(
     private val parentId: String?,
     private val serverBaseUrl: String
 ) : PagingSource<Int, MediaItem>() {
+
+    private fun convertRemoteEmbyItemToDomain(remoteItem: com.trplayer.embyplayer.data.remote.model.EmbyItem): DomainEmbyItem {
+        return DomainEmbyItem(
+            id = remoteItem.id,
+            name = remoteItem.name,
+            type = remoteItem.type,
+            mediaType = remoteItem.mediaType,
+            overview = remoteItem.overview,
+            productionYear = remoteItem.productionYear,
+            premiereDate = remoteItem.premiereDate,
+            runtimeTicks = remoteItem.runTimeTicks,
+            seriesName = remoteItem.seriesName,
+            seasonName = remoteItem.seasonName,
+            episodeNumber = remoteItem.indexNumber,
+            seasonNumber = remoteItem.parentIndexNumber,
+            communityRating = remoteItem.communityRating,
+            officialRating = remoteItem.officialRating,
+            imageTags = remoteItem.imageTags,
+            backdropImageTags = remoteItem.backdropImageTags,
+            mediaSources = remoteItem.mediaSources?.map { convertRemoteMediaSourceToDomain(it) },
+            chapters = remoteItem.chapters?.map { convertRemoteChapterToDomain(it) },
+            userData = remoteItem.userData?.let { convertRemoteUserDataToDomain(it) }
+        )
+    }
+    
+    private fun convertRemoteMediaSourceToDomain(remoteSource: com.trplayer.embyplayer.data.remote.model.MediaSource): DomainMediaSource {
+        return DomainMediaSource(
+            id = remoteSource.id,
+            path = remoteSource.path,
+            protocol = remoteSource.protocol,
+            container = remoteSource.container,
+            size = remoteSource.size,
+            name = remoteSource.name,
+            isRemote = remoteSource.isRemote,
+            runtimeTicks = remoteSource.runTimeTicks,
+            supportsTranscoding = remoteSource.supportsTranscoding,
+            supportsDirectStream = remoteSource.supportsDirectStream,
+            supportsDirectPlay = remoteSource.supportsDirectPlay,
+            videoStream = remoteSource.videoStream?.let { convertRemoteVideoStreamToDomain(it) },
+            audioStream = remoteSource.audioStream?.let { convertRemoteAudioStreamToDomain(it) },
+            mediaStreams = remoteSource.mediaStreams?.map { convertRemoteMediaStreamToDomain(it) }
+        )
+    }
+    
+    private fun convertRemoteVideoStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.VideoStream): com.trplayer.embyplayer.domain.model.VideoStream {
+        return com.trplayer.embyplayer.domain.model.VideoStream(
+            codec = remoteStream.codec,
+            width = remoteStream.width,
+            height = remoteStream.height,
+            averageFrameRate = remoteStream.averageFrameRate,
+            realFrameRate = remoteStream.realFrameRate,
+            profile = remoteStream.profile,
+            level = remoteStream.level,
+            pixelFormat = remoteStream.pixelFormat,
+            refFrames = remoteStream.refFrames
+        )
+    }
+    
+    private fun convertRemoteAudioStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.AudioStream): com.trplayer.embyplayer.domain.model.AudioStream {
+        return com.trplayer.embyplayer.domain.model.AudioStream(
+            codec = remoteStream.codec,
+            channels = remoteStream.channels,
+            sampleRate = remoteStream.sampleRate,
+            bitrate = remoteStream.bitrate
+        )
+    }
+    
+    private fun convertRemoteMediaStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.MediaStream): com.trplayer.embyplayer.domain.model.MediaStream {
+        return com.trplayer.embyplayer.domain.model.MediaStream(
+            index = remoteStream.index,
+            type = remoteStream.type,
+            codec = remoteStream.codec,
+            language = remoteStream.language,
+            title = remoteStream.title,
+            displayTitle = remoteStream.displayTitle,
+            isDefault = remoteStream.isDefault,
+            isForced = remoteStream.isForced,
+            isHearingImpaired = remoteStream.isHearingImpaired,
+            width = remoteStream.width,
+            height = remoteStream.height,
+            aspectRatio = remoteStream.aspectRatio,
+            averageFrameRate = remoteStream.averageFrameRate,
+            realFrameRate = remoteStream.realFrameRate,
+            profile = remoteStream.profile,
+            level = remoteStream.level,
+            channels = remoteStream.channels,
+            sampleRate = remoteStream.sampleRate,
+            bitrate = remoteStream.bitrate,
+            bitDepth = remoteStream.bitDepth
+        )
+    }
+    
+    private fun convertRemoteChapterToDomain(remoteChapter: com.trplayer.embyplayer.data.remote.model.Chapter): com.trplayer.embyplayer.domain.model.Chapter {
+        return com.trplayer.embyplayer.domain.model.Chapter(
+            startPositionTicks = remoteChapter.startPositionTicks,
+            name = remoteChapter.name,
+            imagePath = remoteChapter.imagePath
+        )
+    }
+    
+    private fun convertRemoteUserDataToDomain(remoteUserData: com.trplayer.embyplayer.data.remote.model.UserData): DomainUserData {
+        return DomainUserData(
+            rating = remoteUserData.rating,
+            playedPercentage = remoteUserData.playedPercentage,
+            unplayedItemCount = remoteUserData.unplayedItemCount,
+            playbackPositionTicks = remoteUserData.playbackPositionTicks,
+            playCount = remoteUserData.playCount,
+            isFavorite = remoteUserData.isFavorite,
+            likes = remoteUserData.likes,
+            lastPlayedDate = remoteUserData.lastPlayedDate,
+            played = remoteUserData.played,
+            key = remoteUserData.key
+        )
+    }
     
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
         return try {
@@ -107,9 +229,10 @@ class MediaPagingSource(
                 limit = pageSize
             )
             
-            val mediaItems = response.items.map { embyItem ->
-                MediaItem.fromEmbyItem(embyItem, serverBaseUrl)
-            }
+            val mediaItems = response.body()?.items?.map { embyItem ->
+                val domainItem = convertRemoteEmbyItemToDomain(embyItem)
+                MediaItem.fromEmbyItem(domainItem, serverBaseUrl)
+            } ?: emptyList()
             
             LoadResult.Page<Int, MediaItem>(
                 data = mediaItems,
@@ -138,6 +261,120 @@ class SearchPagingSource(
     private val query: String,
     private val serverBaseUrl: String
 ) : PagingSource<Int, MediaItem>() {
+
+    private fun convertRemoteEmbyItemToDomain(remoteItem: com.trplayer.embyplayer.data.remote.model.EmbyItem): DomainEmbyItem {
+        return DomainEmbyItem(
+            id = remoteItem.id,
+            name = remoteItem.name,
+            type = remoteItem.type,
+            mediaType = remoteItem.mediaType,
+            overview = remoteItem.overview,
+            productionYear = remoteItem.productionYear,
+            premiereDate = remoteItem.premiereDate,
+            runtimeTicks = remoteItem.runTimeTicks,
+            seriesName = remoteItem.seriesName,
+            seasonName = remoteItem.seasonName,
+            episodeNumber = remoteItem.indexNumber,
+            seasonNumber = remoteItem.parentIndexNumber,
+            communityRating = remoteItem.communityRating,
+            officialRating = remoteItem.officialRating,
+            imageTags = remoteItem.imageTags,
+            backdropImageTags = remoteItem.backdropImageTags,
+            mediaSources = remoteItem.mediaSources?.map { convertRemoteMediaSourceToDomain(it) },
+            chapters = remoteItem.chapters?.map { convertRemoteChapterToDomain(it) },
+            userData = remoteItem.userData?.let { convertRemoteUserDataToDomain(it) }
+        )
+    }
+    
+    private fun convertRemoteMediaSourceToDomain(remoteSource: com.trplayer.embyplayer.data.remote.model.MediaSource): DomainMediaSource {
+        return DomainMediaSource(
+            id = remoteSource.id,
+            path = remoteSource.path,
+            protocol = remoteSource.protocol,
+            container = remoteSource.container,
+            size = remoteSource.size,
+            name = remoteSource.name,
+            isRemote = remoteSource.isRemote,
+            runtimeTicks = remoteSource.runTimeTicks,
+            supportsTranscoding = remoteSource.supportsTranscoding,
+            supportsDirectStream = remoteSource.supportsDirectStream,
+            supportsDirectPlay = remoteSource.supportsDirectPlay,
+            videoStream = remoteSource.videoStream?.let { convertRemoteVideoStreamToDomain(it) },
+            audioStream = remoteSource.audioStream?.let { convertRemoteAudioStreamToDomain(it) },
+            mediaStreams = remoteSource.mediaStreams?.map { convertRemoteMediaStreamToDomain(it) }
+        )
+    }
+    
+    private fun convertRemoteVideoStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.VideoStream): com.trplayer.embyplayer.domain.model.VideoStream {
+        return com.trplayer.embyplayer.domain.model.VideoStream(
+            codec = remoteStream.codec,
+            width = remoteStream.width,
+            height = remoteStream.height,
+            averageFrameRate = remoteStream.averageFrameRate,
+            realFrameRate = remoteStream.realFrameRate,
+            profile = remoteStream.profile,
+            level = remoteStream.level,
+            pixelFormat = remoteStream.pixelFormat,
+            refFrames = remoteStream.refFrames
+        )
+    }
+    
+    private fun convertRemoteAudioStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.AudioStream): com.trplayer.embyplayer.domain.model.AudioStream {
+        return com.trplayer.embyplayer.domain.model.AudioStream(
+            codec = remoteStream.codec,
+            channels = remoteStream.channels,
+            sampleRate = remoteStream.sampleRate,
+            bitrate = remoteStream.bitrate
+        )
+    }
+    
+    private fun convertRemoteMediaStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.MediaStream): com.trplayer.embyplayer.domain.model.MediaStream {
+        return com.trplayer.embyplayer.domain.model.MediaStream(
+            index = remoteStream.index,
+            type = remoteStream.type,
+            codec = remoteStream.codec,
+            language = remoteStream.language,
+            title = remoteStream.title,
+            displayTitle = remoteStream.displayTitle,
+            isDefault = remoteStream.isDefault,
+            isForced = remoteStream.isForced,
+            isHearingImpaired = remoteStream.isHearingImpaired,
+            width = remoteStream.width,
+            height = remoteStream.height,
+            aspectRatio = remoteStream.aspectRatio,
+            averageFrameRate = remoteStream.averageFrameRate,
+            realFrameRate = remoteStream.realFrameRate,
+            profile = remoteStream.profile,
+            level = remoteStream.level,
+            channels = remoteStream.channels,
+            sampleRate = remoteStream.sampleRate,
+            bitrate = remoteStream.bitrate,
+            bitDepth = remoteStream.bitDepth
+        )
+    }
+    
+    private fun convertRemoteChapterToDomain(remoteChapter: com.trplayer.embyplayer.data.remote.model.Chapter): com.trplayer.embyplayer.domain.model.Chapter {
+        return com.trplayer.embyplayer.domain.model.Chapter(
+            startPositionTicks = remoteChapter.startPositionTicks,
+            name = remoteChapter.name,
+            imagePath = remoteChapter.imagePath
+        )
+    }
+    
+    private fun convertRemoteUserDataToDomain(remoteUserData: com.trplayer.embyplayer.data.remote.model.UserData): DomainUserData {
+        return DomainUserData(
+            rating = remoteUserData.rating,
+            playedPercentage = remoteUserData.playedPercentage,
+            unplayedItemCount = remoteUserData.unplayedItemCount,
+            playbackPositionTicks = remoteUserData.playbackPositionTicks,
+            playCount = remoteUserData.playCount,
+            isFavorite = remoteUserData.isFavorite,
+            likes = remoteUserData.likes,
+            lastPlayedDate = remoteUserData.lastPlayedDate,
+            played = remoteUserData.played,
+            key = remoteUserData.key
+        )
+    }
     
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MediaItem> {
         return try {
@@ -150,9 +387,10 @@ class SearchPagingSource(
                 limit = pageSize
             )
             
-            val mediaItems = response.items.map { embyItem ->
-                MediaItem.fromEmbyItem(embyItem, serverBaseUrl)
-            }
+            val mediaItems = response.body()?.items?.map { embyItem ->
+                val domainItem = convertRemoteEmbyItemToDomain(embyItem)
+                MediaItem.fromEmbyItem(domainItem, serverBaseUrl)
+            } ?: emptyList()
             
             LoadResult.Page<Int, MediaItem>(
                 data = mediaItems,

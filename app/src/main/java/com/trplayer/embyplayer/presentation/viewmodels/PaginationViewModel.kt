@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,18 +34,23 @@ class PaginationViewModel @Inject constructor(
      * 获取媒体列表的分页数据流
      */
     fun getMediaPagingData(libraryId: String? = null): Flow<PagingData<MediaItem>> {
-        val newFlow = paginationRepository.getMediaPagingData(libraryId)
-            .cachedIn(viewModelScope)
-        currentMediaFlow = newFlow
-        return newFlow
+        return flow {
+            val newFlow = paginationRepository.getMediaItems(libraryId)
+                .cachedIn(viewModelScope)
+            currentMediaFlow = newFlow
+            emitAll(newFlow)
+        }
     }
     
     /**
      * 搜索媒体内容的分页数据流
      */
     fun searchMediaPagingData(query: String): Flow<PagingData<MediaItem>> {
-        return paginationRepository.searchMediaPagingData(query)
-            .cachedIn(viewModelScope)
+        return flow {
+            val searchFlow = paginationRepository.searchMediaItems(query)
+                .cachedIn(viewModelScope)
+            emitAll(searchFlow)
+        }
     }
     
     /**

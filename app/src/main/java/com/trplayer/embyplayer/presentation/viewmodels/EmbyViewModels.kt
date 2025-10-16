@@ -2,10 +2,10 @@ package com.trplayer.embyplayer.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.trplayer.embyplayer.data.remote.model.PlaybackInfoResponse
-import com.trplayer.embyplayer.data.remote.model.PlaybackStartRequest
-import com.trplayer.embyplayer.data.remote.model.PlaybackProgressRequest
-import com.trplayer.embyplayer.data.remote.model.PlaybackStopRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackInfoResponse
+import com.trplayer.embyplayer.data.remote.api.PlaybackStartRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackProgressRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackStopRequest
 import com.trplayer.embyplayer.domain.model.EmbyItem
 import com.trplayer.embyplayer.domain.model.EmbyLibrary
 import com.trplayer.embyplayer.domain.model.EmbyServer
@@ -238,7 +238,7 @@ class LibraryViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                val result = repository.searchItems(userId, searchTerm)
+                val result = repository.searchItems(userId, searchTerm, 20)
                 if (result.isSuccess) {
                     _uiState.update { state ->
                         state.copy(

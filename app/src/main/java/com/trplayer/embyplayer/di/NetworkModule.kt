@@ -4,7 +4,10 @@ import android.content.Context
 import com.trplayer.embyplayer.data.local.datastore.EmbyDataStore
 import com.trplayer.embyplayer.data.remote.api.EmbyApiService
 import com.trplayer.embyplayer.data.remote.interceptor.EmbyAuthInterceptor
+import com.trplayer.embyplayer.data.repository.EmbyRepositoryImpl
+import com.trplayer.embyplayer.domain.repository.EmbyRepository
 import com.trplayer.embyplayer.presentation.player.ExoPlayerManager
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,7 +22,15 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object NetworkModule {
+abstract class NetworkModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindEmbyRepository(
+        embyRepositoryImpl: EmbyRepositoryImpl
+    ): EmbyRepository
+
+    companion object {
 
     @Provides
     @Singleton
@@ -69,9 +80,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideExoPlayerManager(
-        context: Context,
+        @ApplicationContext context: Context,
         apiService: EmbyApiService
     ): ExoPlayerManager {
         return ExoPlayerManager(context, apiService)
+    }
     }
 }

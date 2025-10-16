@@ -157,11 +157,14 @@ data class Chapter(
 data class UserData(
     val rating: Double?,
     val playedPercentage: Double?,
+    val unplayedItemCount: Int?,
     val playbackPositionTicks: Long?,
     val playCount: Int,
     val isFavorite: Boolean,
+    val likes: Boolean?,
     val lastPlayedDate: String?,
-    val played: Boolean
+    val played: Boolean,
+    val key: String
 ) {
     val playbackPositionMs: Long?
         get() = playbackPositionTicks?.let { it / 10000 }

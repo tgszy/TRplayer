@@ -20,6 +20,7 @@ import com.trplayer.embyplayer.presentation.theme.TvShapes
  */
 
 // 电视亮色主题配色
+@OptIn(ExperimentalTvMaterial3Api::class)
 private val TvLightColorScheme = tvLightColorScheme(
     primary = Color(0xFF0066CC),
     onPrimary = Color.White,
@@ -42,6 +43,7 @@ private val TvLightColorScheme = tvLightColorScheme(
 )
 
 // 电视深色主题配色
+@OptIn(ExperimentalTvMaterial3Api::class)
 private val TvDarkColorScheme = tvDarkColorScheme(
     primary = Color(0xFFABC7FF),
     onPrimary = Color(0xFF002E6B),

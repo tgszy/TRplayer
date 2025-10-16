@@ -2,13 +2,15 @@ package com.trplayer.embyplayer.data.repository
 
 import com.trplayer.embyplayer.data.local.datastore.EmbyDataStore
 import com.trplayer.embyplayer.data.remote.api.EmbyApiService
-import com.trplayer.embyplayer.data.remote.model.EmbyItem as RemoteEmbyItem
 import com.trplayer.embyplayer.data.remote.model.AuthenticationResult
+import com.trplayer.embyplayer.data.remote.model.EmbyItem as RemoteEmbyItem
 import com.trplayer.embyplayer.data.remote.model.EmbyUser as RemoteEmbyUser
-import com.trplayer.embyplayer.data.remote.model.PlaybackInfoResponse
-import com.trplayer.embyplayer.data.remote.model.PlaybackStartRequest
-import com.trplayer.embyplayer.data.remote.model.PlaybackProgressRequest
-import com.trplayer.embyplayer.data.remote.model.PlaybackStopRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackInfoResponse
+import com.trplayer.embyplayer.data.remote.api.PlaybackStartRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackProgressRequest
+import com.trplayer.embyplayer.data.remote.api.PlaybackStopRequest
+import com.trplayer.embyplayer.data.remote.api.EmbyLibraryResponse
+import com.trplayer.embyplayer.data.remote.api.EmbyItemsResponse
 import com.trplayer.embyplayer.domain.model.EmbyItem
 import com.trplayer.embyplayer.domain.model.EmbyUser
 import com.trplayer.embyplayer.domain.model.EmbyLibrary
@@ -55,21 +57,12 @@ class EmbyRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getPublicUsers(): Result<List<EmbyUser>> {
+    override suspend fun getPublicUsers(): Result<List<RemoteEmbyUser>> {
         return try {
             val response = apiService.getPublicUsers()
             if (response.isSuccessful) {
                 val remoteUsers = response.body() ?: emptyList()
-                val domainUsers = remoteUsers.map { remoteUser ->
-                    EmbyUser(
-                        id = remoteUser.id,
-                        name = remoteUser.name,
-                        serverId = remoteUser.serverId,
-                        hasPassword = remoteUser.hasPassword,
-                        lastLoginDate = remoteUser.lastLoginDate
-                    )
-                }
-                Result.success(domainUsers)
+                Result.success(remoteUsers)
             } else {
                 Result.failure(HttpException(response))
             }
@@ -78,19 +71,12 @@ class EmbyRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getUserById(userId: String): Result<EmbyUser> {
+    override suspend fun getUserById(userId: String): Result<RemoteEmbyUser> {
         return try {
             val response = apiService.getUserById(userId)
             if (response.isSuccessful) {
                 response.body()?.let { remoteUser ->
-                    val domainUser = EmbyUser(
-                        id = remoteUser.id,
-                        name = remoteUser.name,
-                        serverId = remoteUser.serverId,
-                        hasPassword = remoteUser.hasPassword,
-                        lastLoginDate = remoteUser.lastLoginDate
-                    )
-                    Result.success(domainUser)
+                    Result.success(remoteUser)
                 } ?: Result.failure(Exception("用户不存在"))
             } else {
                 Result.failure(HttpException(response))
@@ -202,7 +188,11 @@ class EmbyRepositoryImpl @Inject constructor(
 
     override suspend fun searchItems(userId: String, searchTerm: String, limit: Int): Result<List<EmbyItem>> {
         return try {
-            val response = apiService.searchItems(userId, searchTerm, limit)
+            val response = apiService.searchItems(
+                userId = userId,
+                searchTerm = searchTerm,
+                limit = limit
+            )
             if (response.isSuccessful) {
                 val items = response.body()?.items?.map { remoteItem ->
                     convertToDomainItem(remoteItem)
@@ -342,8 +332,8 @@ class EmbyRepositoryImpl @Inject constructor(
     /**
      * 将远程API返回的媒体项转换为域模型
      */
-    private fun convertToDomainItem(remoteItem: RemoteEmbyItem): EmbyItem {
-        return EmbyItem(
+    private fun convertToDomainItem(remoteItem: com.trplayer.embyplayer.data.remote.model.EmbyItem): com.trplayer.embyplayer.domain.model.EmbyItem {
+        return com.trplayer.embyplayer.domain.model.EmbyItem(
             id = remoteItem.id,
             name = remoteItem.name,
             type = remoteItem.type,
@@ -360,84 +350,99 @@ class EmbyRepositoryImpl @Inject constructor(
             officialRating = remoteItem.officialRating,
             imageTags = remoteItem.imageTags,
             backdropImageTags = remoteItem.backdropImageTags,
-            mediaSources = remoteItem.mediaSources?.map { remoteSource ->
-                MediaSource(
-                    id = remoteSource.id,
-                    path = remoteSource.path,
-                    protocol = remoteSource.protocol,
-                    container = remoteSource.container,
-                    size = remoteSource.size,
-                    name = remoteSource.name,
-                    isRemote = remoteSource.isRemote,
-                    runtimeTicks = remoteSource.runTimeTicks,
-                    supportsTranscoding = remoteSource.supportsTranscoding,
-                    supportsDirectStream = remoteSource.supportsDirectStream,
-                    supportsDirectPlay = remoteSource.supportsDirectPlay,
-                    videoStream = remoteSource.videoStream?.let { remoteVideo ->
-                        VideoStream(
-                            codec = remoteVideo.codec,
-                            width = remoteVideo.width,
-                            height = remoteVideo.height,
-                            averageFrameRate = remoteVideo.averageFrameRate,
-                            realFrameRate = remoteVideo.realFrameRate,
-                            profile = remoteVideo.profile,
-                            level = remoteVideo.level,
-                            pixelFormat = remoteVideo.pixelFormat,
-                            refFrames = remoteVideo.refFrames
-                        )
-                    },
-                    audioStream = remoteSource.audioStream?.let { remoteAudio ->
-                        AudioStream(
-                            codec = remoteAudio.codec,
-                            channels = remoteAudio.channels,
-                            sampleRate = remoteAudio.sampleRate,
-                            bitrate = remoteAudio.bitrate
-                        )
-                    },
-                    mediaStreams = remoteSource.mediaStreams?.map { remoteStream ->
-                        MediaStream(
-                            index = remoteStream.index,
-                            type = remoteStream.type,
-                            codec = remoteStream.codec,
-                            language = remoteStream.language,
-                            title = remoteStream.title,
-                            displayTitle = remoteStream.displayTitle,
-                            isDefault = remoteStream.isDefault,
-                            isForced = remoteStream.isForced,
-                            isHearingImpaired = remoteStream.isHearingImpaired,
-                            width = remoteStream.width,
-                            height = remoteStream.height,
-                            aspectRatio = remoteStream.aspectRatio,
-                            averageFrameRate = remoteStream.averageFrameRate,
-                            realFrameRate = remoteStream.realFrameRate,
-                            profile = remoteStream.profile,
-                            level = remoteStream.level,
-                            channels = remoteStream.channels,
-                            sampleRate = remoteStream.sampleRate,
-                            bitrate = remoteStream.bitrate,
-                            bitDepth = remoteStream.bitDepth
-                        )
-                    }
-                )
-            },
-            chapters = remoteItem.chapters?.map { remoteChapter ->
-                Chapter(
-                    startPositionTicks = remoteChapter.startPositionTicks,
-                    name = remoteChapter.name,
-                    imagePath = remoteChapter.imagePath
-                )
-            },
-            userData = remoteItem.userData?.let { remoteUserData ->
-                UserData(
-                    rating = remoteUserData.rating,
-                    playedPercentage = remoteUserData.playedPercentage,
-                    playbackPositionTicks = remoteUserData.playbackPositionTicks,
-                    playCount = remoteUserData.playCount,
-                    isFavorite = remoteUserData.isFavorite,
-                    lastPlayedDate = remoteUserData.lastPlayedDate,
-                    played = remoteUserData.played
-                )
-            }
+            mediaSources = remoteItem.mediaSources?.map { convertRemoteMediaSourceToDomain(it) },
+            chapters = remoteItem.chapters?.map { convertRemoteChapterToDomain(it) },
+            userData = remoteItem.userData?.let { convertRemoteUserDataToDomain(it) }
+        )
+    }
+    
+    private fun convertRemoteMediaSourceToDomain(remoteSource: com.trplayer.embyplayer.data.remote.model.MediaSource): com.trplayer.embyplayer.domain.model.MediaSource {
+        return com.trplayer.embyplayer.domain.model.MediaSource(
+            id = remoteSource.id,
+            path = remoteSource.path,
+            protocol = remoteSource.protocol,
+            container = remoteSource.container,
+            size = remoteSource.size,
+            name = remoteSource.name,
+            isRemote = remoteSource.isRemote,
+            runtimeTicks = remoteSource.runTimeTicks,
+            supportsTranscoding = remoteSource.supportsTranscoding,
+            supportsDirectStream = remoteSource.supportsDirectStream,
+            supportsDirectPlay = remoteSource.supportsDirectPlay,
+            videoStream = remoteSource.videoStream?.let { convertRemoteVideoStreamToDomain(it) },
+            audioStream = remoteSource.audioStream?.let { convertRemoteAudioStreamToDomain(it) },
+            mediaStreams = remoteSource.mediaStreams?.map { convertRemoteMediaStreamToDomain(it) }
+        )
+    }
+    
+    private fun convertRemoteVideoStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.VideoStream): com.trplayer.embyplayer.domain.model.VideoStream {
+        return com.trplayer.embyplayer.domain.model.VideoStream(
+            codec = remoteStream.codec,
+            width = remoteStream.width,
+            height = remoteStream.height,
+            averageFrameRate = remoteStream.averageFrameRate,
+            realFrameRate = remoteStream.realFrameRate,
+            profile = remoteStream.profile,
+            level = remoteStream.level,
+            pixelFormat = remoteStream.pixelFormat,
+            refFrames = remoteStream.refFrames
+        )
+    }
+    
+    private fun convertRemoteAudioStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.AudioStream): com.trplayer.embyplayer.domain.model.AudioStream {
+        return com.trplayer.embyplayer.domain.model.AudioStream(
+            codec = remoteStream.codec,
+            channels = remoteStream.channels,
+            sampleRate = remoteStream.sampleRate,
+            bitrate = remoteStream.bitrate
+        )
+    }
+    
+    private fun convertRemoteMediaStreamToDomain(remoteStream: com.trplayer.embyplayer.data.remote.model.MediaStream): com.trplayer.embyplayer.domain.model.MediaStream {
+        return com.trplayer.embyplayer.domain.model.MediaStream(
+            index = remoteStream.index,
+            type = remoteStream.type,
+            codec = remoteStream.codec,
+            language = remoteStream.language,
+            title = remoteStream.title,
+            displayTitle = remoteStream.displayTitle,
+            isDefault = remoteStream.isDefault,
+            isForced = remoteStream.isForced,
+            isHearingImpaired = remoteStream.isHearingImpaired,
+            width = remoteStream.width,
+            height = remoteStream.height,
+            aspectRatio = remoteStream.aspectRatio,
+            averageFrameRate = remoteStream.averageFrameRate,
+            realFrameRate = remoteStream.realFrameRate,
+            profile = remoteStream.profile,
+            level = remoteStream.level,
+            channels = remoteStream.channels,
+            sampleRate = remoteStream.sampleRate,
+            bitrate = remoteStream.bitrate,
+            bitDepth = remoteStream.bitDepth
+        )
+    }
+    
+    private fun convertRemoteChapterToDomain(remoteChapter: com.trplayer.embyplayer.data.remote.model.Chapter): com.trplayer.embyplayer.domain.model.Chapter {
+        return com.trplayer.embyplayer.domain.model.Chapter(
+            startPositionTicks = remoteChapter.startPositionTicks,
+            name = remoteChapter.name,
+            imagePath = remoteChapter.imagePath
+        )
+    }
+    
+    private fun convertRemoteUserDataToDomain(remoteUserData: com.trplayer.embyplayer.data.remote.model.UserData): com.trplayer.embyplayer.domain.model.UserData {
+        return com.trplayer.embyplayer.domain.model.UserData(
+            rating = remoteUserData.rating,
+            playedPercentage = remoteUserData.playedPercentage,
+            unplayedItemCount = remoteUserData.unplayedItemCount,
+            playbackPositionTicks = remoteUserData.playbackPositionTicks,
+            playCount = remoteUserData.playCount,
+            isFavorite = remoteUserData.isFavorite,
+            likes = remoteUserData.likes,
+            lastPlayedDate = remoteUserData.lastPlayedDate,
+            played = remoteUserData.played,
+            key = remoteUserData.key
         )
     }
 }
