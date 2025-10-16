@@ -10,7 +10,15 @@ import com.trplayer.embyplayer.data.remote.model.PlaybackStartRequest
 import com.trplayer.embyplayer.data.remote.model.PlaybackProgressRequest
 import com.trplayer.embyplayer.data.remote.model.PlaybackStopRequest
 import com.trplayer.embyplayer.domain.model.EmbyItem
-import com.trplayer.embyplayer.domain.model.*
+import com.trplayer.embyplayer.domain.model.EmbyUser
+import com.trplayer.embyplayer.domain.model.EmbyLibrary
+import com.trplayer.embyplayer.domain.model.EmbyServer
+import com.trplayer.embyplayer.domain.model.MediaSource
+import com.trplayer.embyplayer.domain.model.VideoStream
+import com.trplayer.embyplayer.domain.model.AudioStream
+import com.trplayer.embyplayer.domain.model.MediaStream
+import com.trplayer.embyplayer.domain.model.Chapter
+import com.trplayer.embyplayer.domain.model.UserData
 import com.trplayer.embyplayer.domain.repository.EmbyRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -28,7 +36,7 @@ class EmbyRepositoryImpl @Inject constructor(
 
     // ==================== 用户认证相关 ====================
 
-    override suspend fun authenticateUser(userId: String, password: String?): Result<com.trplayer.embyplayer.data.remote.model.AuthenticationResult> {
+    override suspend fun authenticateUser(userId: String, password: String?): Result<AuthenticationResult> {
         return try {
             val response = apiService.authenticateUser(userId, password)
             if (response.isSuccessful) {
